@@ -1,8 +1,8 @@
 param location string = resourceGroup().location
-param application string = 'pocketcalculatorshow'
-param environment string = 'dev'
-param adminUsername string = 'azureuser'
-param adminPassword string = 'w0m0D@ci!'
+param application string
+param environment string
+param adminUsername string
+param adminPassword string
 
 module nsg './network/nsg.bicep' = {
   params: {

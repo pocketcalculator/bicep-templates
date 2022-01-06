@@ -1,13 +1,14 @@
 #!/bin/bash
 
-subscription=''
-region=eastus2
-application=pocketcalculatorshow
+subscription=null
+location=eastus2
+application=application
 environment=dev
-owner=paul.sczurek@outlook.com
-resourceGroupName=rg-$application-$environment-$region
-vnetName=vnet-$application-$environment-$region
+owner=pocketcalculatorshow@gmail.com
+resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
+adminUsername=azureuser
+adminPassword=cHanG3-pA55w0rrD!!!
 
 echo subscription = $subscription
 echo location = $location
@@ -15,15 +16,18 @@ echo application = $application
 echo environment = $environment
 echo owner = $owner
 echo resourceGroupName = $resourceGroupName
-echo vnetName = $vnetName
 echo vnetCIDRPrefix = $vnetCIDRPrefix
+echo adminUsername = $adminUsername
+echo adminPassword = '**********'
 
 echo "Creating deployment for ${environment} ${application} network..."
 az deployment group create \
 	--resource-group $resourceGroupName \
-	--name $vnetName-deployment \
-	--template-file ./network.bicep \
+	--name $application-deployment \
+	--template-file ./main.bicep \
 	--parameters \
-		"vnetName=$vnetName" \
-		"location=$region"
+		"application=$application" \
+		"environment=$environment" \
+		"adminUsername=$adminUsername" \
+		"adminPassword=$adminPassword"
 echo "Deployment for ${environment} ${application} network is complete."

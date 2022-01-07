@@ -95,3 +95,4 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
 }
 
 output webServerId string = webServer.id
+output webServerIP string = networkInterface.properties.ipConfigurations[0].properties.privateIPAddress

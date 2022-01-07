@@ -3,6 +3,7 @@ param application string
 param environment string
 param publicSubnetId string
 param webServerId string
+param webServerIP string
 var agwName = 'agw-${application}-${environment}-${location}'
 var agwPublicIP = 'ip-${agwName}'
 // https://github.com/Azure/bicep/issues/1852
@@ -61,6 +62,13 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
     backendAddressPools: [
       {
         name: 'backend-web'
+        properties: {
+          backendAddresses: [
+            {
+              ipAddress: webServerIP
+            }
+          ]
+        }
       }
     ]
     backendHttpSettingsCollection: [

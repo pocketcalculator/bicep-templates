@@ -44,6 +44,7 @@ module agw './network/agw.bicep' = {
     application: application
     environment: environment
     webServerId: webserver.outputs.webServerId
+    webServerIP: webserver.outputs.webServerIP
   }
   name: 'agw'
 }

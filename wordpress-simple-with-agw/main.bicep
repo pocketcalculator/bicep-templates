@@ -28,7 +28,7 @@ module vnet './network/vnet.bicep' = {
 
 module webserver './compute/webserver.bicep' = {
   params: {
-    publicSubnetId: vnet.outputs.publicSubnetId
+    privateSubnetId: vnet.outputs.privateSubnetId
     location: location
     application: application
     environment: environment
@@ -36,4 +36,14 @@ module webserver './compute/webserver.bicep' = {
     adminPassword: adminPassword
   }
   name: 'webserver'
+}
+
+module agw './network/agw.bicep' = {
+  params: {
+    publicSubnetId: vnet.outputs.publicSubnetId
+    application: application
+    environment: environment
+    webServerId: webserver.outputs.webServerId
+  }
+  name: 'agw'
 }

@@ -1,69 +1,89 @@
 param location string = resourceGroup().location
 param application string
 param environment string
+param publicSubnetId string
+param webServerId string
 var agwName = 'agw-${application}-${environment}-${location}'
+var agwPublicIP = 'ip-${agwName}'
+// https://github.com/Azure/bicep/issues/1852
+var agwId = resourceId('Microsoft.Network/applicationGateways', agwName)
+
+resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
+  name: agwPublicIP
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+    idleTimeoutInMinutes: 4
+  }
+}
 
 resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' = {
   name: agwName
   location: location
   properties: {
     sku: {
-      name: 'Standard_Small'
-      tier: 'Standard'
-      capacity: 'capacity'
+      name: 'WAF_v2'
+      tier: 'WAF_v2'
+      capacity: 1
     }
     gatewayIPConfigurations: [
       {
-        name: 'name'
+        name: 'agw-gatewayIPConfig'
         properties: {
           subnet: {
-            id: 'id'
+            id: publicSubnetId
           }
         }
       }
     ]
     frontendIPConfigurations: [
       {
-        name: 'name'
+        name: 'agw-frontEndIPConfig'
         properties: {
           publicIPAddress: {
-            id: 'id'
+            id: publicIP.id
           }
         }
       }
     ]
     frontendPorts: [
       {
-        name: 'name'
+        name: 'http80'
         properties: {
-          port: 'port'
+          port: 80
         }
       }
     ]
     backendAddressPools: [
       {
-        name: 'name'
+        name: 'backend-web'
       }
     ]
     backendHttpSettingsCollection: [
       {
-        name: 'name'
+        name: 'webServerHttp80'
         properties: {
-          port: 'port'
+          port: 80
           protocol: 'Http'
           cookieBasedAffinity: 'Disabled'
+          pickHostNameFromBackendAddress: false
+          requestTimeout: 20
         }
       }
     ]
     httpListeners: [
       {
-        name: 'name'
+        name: 'webHttpListener'
         properties: {
           frontendIPConfiguration: {
-            id: 'id'
+            id: concat(agwId, '/frontendIPConfigurations/agw-frontEndIPConfig')
           }
           frontendPort: {
-            id: 'id'
+            id: concat(agwId, '/frontendPorts/http80')
           }
           protocol: 'Http'
           sslCertificate: null
@@ -72,17 +92,17 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
     ]
     requestRoutingRules: [
       {
-        name: 'name'
+        name: 'rule-http80'
         properties: {
           ruleType: 'Basic'
           httpListener: {
-            id: 'id'
+            id: concat(agwId, '/httpListeners/webHttpListener')
           }
           backendAddressPool: {
-            id: 'id'
+            id: concat(agwId, '/backendAddressPools/backend-web')
           }
           backendHttpSettings: {
-            id: 'id'
+            id: concat(agwId, '/backendHttpSettingsCollection/webServerHttp80')
           }
         }
       }

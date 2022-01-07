@@ -3,14 +3,15 @@ param application string
 param environment string
 param adminUsername string
 param adminPassword string
-param publicSubnetId string
-var webserverVMName = 'web-${application}-${environment}-${location}'
-var webNICName = 'nic-${webserverVMName}'
+param privateSubnetId string
+var webServerVM = 'web-${application}-${environment}-${location}'
+var webNICName = 'nic-${webServerVM}'
 var ipConfigName = 'ipconfig0-${webNICName}'
-var publicIPAddressName = 'ip-${webserverVMName}'
+var publicIPAddressName = 'ip-${webServerVM}'
+var osDiskName = 'disk-os-${webServerVM}'
 @description('Unique DNS Name for the Public IP used to access the Virtual Machine.')
 //var dnsLabelPrefix = toLower('${webserverVMName}-${uniqueString(resourceGroup().id)}')
-var dnsLabelPrefix = toLower('${webserverVMName}')
+var dnsLabelPrefix = toLower('${webServerVM}')
 var osDiskType = 'Standard_LRS'
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
@@ -23,7 +24,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: publicSubnetId
+            id: privateSubnetId
           }
           publicIPAddress: {
             id: publicIP.id
@@ -50,15 +51,15 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   }
 }
 
-resource ubuntuVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: webserverVMName
+resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+  name: webServerVM
   location: location
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B2s'
     }
     osProfile: {
-      computerName: webserverVMName
+      computerName: webServerVM
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
@@ -70,7 +71,7 @@ resource ubuntuVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
         version: 'latest'
       }
       osDisk: {
-        name: 'name'
+        name: osDiskName
         caching: 'ReadWrite'
         createOption: 'FromImage'
         managedDisk: {
@@ -92,3 +93,5 @@ resource ubuntuVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
     }
   }
 }
+
+output webServerId string = webServer.id

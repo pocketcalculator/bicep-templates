@@ -76,6 +76,21 @@ resource webNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-1
           direction: 'Inbound'
         }
       }
+      // required for App Gateway to work
+      {
+        name: 'http65000Rule'
+        properties: {
+          description: 'allow all inbound on ports 65200-65535 (for AGW)'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '65200-65535'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 120
+          direction: 'Inbound'
+        }
+      }
     ]
   }
 }

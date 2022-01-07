@@ -9,8 +9,6 @@ var webNICName = 'nic-${webServerVM}'
 var ipConfigName = 'ipconfig0-${webNICName}'
 var publicIPAddressName = 'ip-${webServerVM}'
 var osDiskName = 'disk-os-${webServerVM}'
-@description('Unique DNS Name for the Public IP used to access the Virtual Machine.')
-//var dnsLabelPrefix = toLower('${webserverVMName}-${uniqueString(resourceGroup().id)}')
 var dnsLabelPrefix = toLower('${webServerVM}')
 var osDiskType = 'Standard_LRS'
 

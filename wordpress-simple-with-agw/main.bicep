@@ -1,7 +1,9 @@
 param location string = resourceGroup().location
 param application string
 param environment string
+@secure()
 param adminUsername string
+@secure()
 param adminPassword string
 
 module nsg './network/nsg.bicep' = {

@@ -142,6 +142,20 @@ resource appNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-1
           direction: 'Inbound'
         }
       }
+      {
+        name: 'ssh22Rule'
+        properties: {
+          description: 'allow access from home on port 22 (SSH)'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '22'
+          sourceAddressPrefix: '24.98.226.0/24'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 130
+          direction: 'Inbound'
+        }
+      }
     ]
   }
 }

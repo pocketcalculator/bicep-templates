@@ -1,6 +1,6 @@
 resource symbolicname 'Microsoft.Web/staticSites@2021-02-01' = {
-  name: 'string'
-  location: 'string'
+  name: 'staticSite'
+  location: 'East US 2'
   tags: {
     tagName1: 'tagValue1'
     tagName2: 'tagValue2'
@@ -8,12 +8,12 @@ resource symbolicname 'Microsoft.Web/staticSites@2021-02-01' = {
   sku: {
     capabilities: [
       {
-        name: 'string'
+        name: 'Standard'
         reason: 'string'
         value: 'string'
       }
     ]
-    capacity: int
+    capacity: 1
     family: 'string'
     locations: [
       'string'

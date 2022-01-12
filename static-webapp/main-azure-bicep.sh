@@ -20,7 +20,7 @@ echo vnetCIDRPrefix = $vnetCIDRPrefix
 echo adminUsername = $adminUsername
 echo adminPassword = '**********'
 
-echo "Creating deployment for ${environment} ${application} network..."
+echo "Creating deployment for ${environment} ${application} static web app..."
 az deployment group create \
 	--resource-group $resourceGroupName \
 	--name $application-deployment \

@@ -2,10 +2,11 @@
 
 subscription=null
 location=eastus2
-application=www.pocketcalculator.io
-staticWebAppName=www.pocketcalculator.io
-repositoryUrl='https://github.com/pocketcalculator/pocketcalculator.io'
+application=
+repositoryUrl=
 repositoryBranch=main
+appLocation=build
+repositoryToken=
 environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
@@ -15,9 +16,11 @@ skuTier=Standard
 echo subscription = $subscription
 echo location = $location
 echo application = $application
-echo staticWebAppName = $staticWebAppName
 echo repositoryUrl = $repositoryUrl
 echo repositoryBranch = $repositoryBranch
+echo appLocation = $appLocation
+echo repositoryToken = $repositoryToken
+
 echo skuName = $skuName
 echo skuTier = $skuTier
 echo environment = $environment
@@ -28,15 +31,15 @@ echo "Creating deployment for ${environment} ${application} static web app..."
 az deployment group create \
 	--resource-group $resourceGroupName \
 	--name $application-deployment \
-	--template-file ./main.bicep \
+	--template-file ./staticWebApp.bicep \
 	--parameters \
 		"application=$application" \
 		"environment=$environment" \
-"subscription=$subscription"
-"application=$application"
-echo staticWebAppName = $staticWebAppName
-echo repositoryUrl = $repositoryUrl
-echo repositoryBranch = $repositoryBranch
-echo skuName = $skuName
-echo skuTier = $skuTier
-echo "Deployment for ${environment} ${application} network is complete."
+		"application=$application" \
+		"repositoryUrl=$repositoryUrl" \
+		"repositoryBranch=$repositoryBranch" \
+		"repositoryToken=$repositoryToken" \
+		"appLocation=$appLocation" \
+		"skuName=$skuName" \
+		"skuTier=$skuTier"
+echo "Deployment for ${environment} ${application} static web app is complete."

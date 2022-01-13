@@ -1,9 +1,13 @@
+param location string = resourceGroup().location
+param environment string
 param repositoryUrl string
 param repositoryBranch string
-param staticWebAppName string
-param location string
+param appLocation string
+param repositoryToken string
 param skuName string
 param skuTier string
+param application string
+var staticWebAppName = 'staticwebapp-${application}-${environment}-${location}'
 
 resource symbolicname 'Microsoft.Web/staticSites@2021-02-01' = {
   name: staticWebAppName
@@ -15,7 +19,10 @@ resource symbolicname 'Microsoft.Web/staticSites@2021-02-01' = {
   properties: {
     allowConfigFileUpdates: true
     branch: repositoryBranch
-    repositoryToken: 'string'
+    repositoryToken: repositoryToken
     repositoryUrl: repositoryUrl
+    buildProperties: {
+      appLocation: appLocation
+    }
   }
 }

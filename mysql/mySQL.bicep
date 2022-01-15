@@ -1,4 +1,4 @@
-param dbName string
+param dbServerName string
 param location string = resourceGroup().location
 param hwFamily string = 'Gen5'
 param hwName string = 'B_Gen5_1'
@@ -10,7 +10,7 @@ param administratorLogin string
 param administratorLoginPassword string
 
 resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
-  name: dbName
+  name: dbServerName
   location: location
   sku: {
     capacity: 1
@@ -26,7 +26,7 @@ resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
     administratorLoginPassword: administratorLoginPassword
     infrastructureEncryption: 'Disabled'
     minimalTlsVersion: 'TLS1_2'
-    sslEnforcement: 'Disabled'
+    sslEnforcement: 'Enabled'
     storageProfile: {
       backupRetentionDays: 7
       geoRedundantBackup: 'Disabled'

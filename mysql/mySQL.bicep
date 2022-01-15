@@ -1,9 +1,8 @@
 param dbServerName string
 param location string = resourceGroup().location
-param hwFamily string = 'Gen5'
-param hwName string = 'B_Gen5_1'
-param hwTier string = 'Basic'
-
+param hwFamily string
+param hwName string
+param hwTier string
 @secure()
 param administratorLogin string
 @secure()

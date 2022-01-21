@@ -6,13 +6,13 @@ param adminUsername string
 @secure()
 param adminPassword string
 
-module nsg './network/nsg.bicep' = {
+module nsg './network/networkSecurityGroup.bicep' = {
   params: {
     location: location
     application: application
     environment: environment
   }
-  name: 'nsg-group'
+  name: 'nsg'
 }
 
 module vnet './network/vnet.bicep' = {
@@ -28,7 +28,7 @@ module vnet './network/vnet.bicep' = {
   name: 'vnet'
 }
 
-module webserver './compute/webserver.bicep' = {
+module webserver './compute/webVM.bicep' = {
   params: {
     privateSubnetId: vnet.outputs.privateSubnetId
     location: location
@@ -40,7 +40,7 @@ module webserver './compute/webserver.bicep' = {
   name: 'webserver'
 }
 
-module agw './network/agw.bicep' = {
+module agw './network/applicationGateway.bicep' = {
   params: {
     publicSubnetId: vnet.outputs.publicSubnetId
     application: application

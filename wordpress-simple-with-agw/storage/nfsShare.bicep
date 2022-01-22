@@ -1,8 +1,7 @@
 param location string = resourceGroup().location
 param application string
 param environment string
-param namePrefix string = 'storage'
-var storageAccountName = '${namePrefix}${uniqueString(resourceGroup().id)}'
+var storageAccountName = 'nfsshare${uniqueString(resourceGroup().id)}'
 var nfsShareName = 'nfsshare'
 var storageAccountSku = 'Premium_ZRS'
 
@@ -27,5 +26,3 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
     }
   }
 }
-
-

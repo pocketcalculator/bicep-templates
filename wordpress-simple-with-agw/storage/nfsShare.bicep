@@ -26,3 +26,5 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
     }
   }
 }
+
+output nfsShareId string = storageAccount.id

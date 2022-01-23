@@ -31,7 +31,7 @@ echo mySqlHwTier = $mySqlHwTier
 echo mySqlAdminLogin = $mySqlAdminLogin
 echo mySqlAdminPassword = '************'
 
-echo "Creating deployment for ${environment} ${application} network..."
+echo "Creating deployment for ${environment} ${application} environment..."
 az deployment group create \
 	--resource-group $resourceGroupName \
 	--name $application-deployment \
@@ -46,4 +46,4 @@ az deployment group create \
 		"mySqlHwTier=$mySqlHwTier" \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
 		"mySqlAdminPassword=$mySqlAdminPassword"		
-echo "Deployment for ${environment} ${application} network is complete."
+echo "Deployment for ${environment} ${application} environment is complete."

@@ -51,6 +51,14 @@ module nfsshare './storage/nfsShare.bicep' = {
   name: 'nfsshare'
 }
 
+module privateEndpoints './network/privateEndpoints.bicep' = {
+  params: {
+    privateSubnetId: vnet.outputs.privateSubnetId
+    location: location
+  }
+  name: 'privateendpoints'
+}
+
 module mysql 'mysql/mySQL.bicep' = {
   params: {
     application: application

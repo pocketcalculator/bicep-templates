@@ -4,6 +4,7 @@ param environment string
 param mySqlHwFamily string
 param mySqlHwName string
 param mySqlHwTier string
+param mySqlvCoreCapacity int
 @secure()
 param mySqlAdminLogin string
 @secure()
@@ -14,7 +15,7 @@ resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
   name: dbServerName
   location: location
   sku: {
-    capacity: 1
+    capacity: mySqlvCoreCapacity
     family: mySqlHwFamily
     name: mySqlHwName
     tier: mySqlHwTier
@@ -39,3 +40,5 @@ resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
     // For remaining properties, see ServerPropertiesForCreate objects
   }
 }
+
+output mySQLId string = mySQLdb.id

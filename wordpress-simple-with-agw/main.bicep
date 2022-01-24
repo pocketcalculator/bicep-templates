@@ -13,6 +13,8 @@ param adminPassword string
 param mySqlHwFamily string
 @description('db server hardware name')
 param mySqlHwName string
+@description('db server vcore capacity')
+param mySqlvCoreCapacity int
 @description('db server hardware tier')
 param mySqlHwTier string
 @secure()
@@ -53,8 +55,13 @@ module nfsshare './storage/nfsShare.bicep' = {
 
 module privateEndpoints './network/privateEndpoints.bicep' = {
   params: {
-    privateSubnetId: vnet.outputs.privateSubnetId
     location: location
+    application: application
+    environment: environment
+    fileShareId: nfsshare.outputs.nfsShareId
+    mySQLId: mysql.outputs.mySQLId
+    privateSubnetId: vnet.outputs.privateSubnetId
+    dbSubnetId: vnet.outputs.dbSubnetId
   }
   name: 'privateendpoints'
 }
@@ -67,6 +74,7 @@ module mysql 'mysql/mySQL.bicep' = {
     mySqlHwFamily: mySqlHwFamily
     mySqlHwName: mySqlHwName
     mySqlHwTier: mySqlHwTier
+    mySqlvCoreCapacity: mySqlvCoreCapacity
     mySqlAdminLogin: mySqlAdminLogin
     mySqlAdminPassword: mySqlAdminPassword
   }

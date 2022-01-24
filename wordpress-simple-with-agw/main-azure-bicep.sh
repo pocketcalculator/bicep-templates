@@ -10,8 +10,13 @@ vnetCIDRPrefix=10.0
 adminUsername=azureuser
 adminPassword=cHanG3-pA55w0rrD!!!
 mySqlHwFamily=Gen5
-mySqlHwName=B_Gen5_1
-mySqlHwTier=Basic
+# Private Endpoint supported only on General Purpose
+# mySqlHwName=B_Gen5_1
+# mySqlvCoreCapacity=1
+# mySqlHwTier=Basic
+mySqlHwName=GP_Gen5_2
+mySqlvCoreCapacity=2
+mySqlHwTier=GeneralPurpose
 mySqlAdminLogin=mysqldbadmin
 mySqlAdminPassword=pA55w0rrD!!!
 
@@ -28,6 +33,7 @@ echo dbServerName = $dbServerName
 echo mySqlHwFamily = $mySqlHwFamily
 echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier
+echo mySqlvCoreCapacity = $mySqlvCoreCapacity
 echo mySqlAdminLogin = $mySqlAdminLogin
 echo mySqlAdminPassword = '************'
 
@@ -44,6 +50,7 @@ az deployment group create \
 		"mySqlHwFamily=$mySqlHwFamily" \
 		"mySqlHwName=$mySqlHwName" \
 		"mySqlHwTier=$mySqlHwTier" \
+		"mySqlvCoreCapacity=$mySqlvCoreCapacity" \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
 		"mySqlAdminPassword=$mySqlAdminPassword"		
 echo "Deployment for ${environment} ${application} environment is complete."

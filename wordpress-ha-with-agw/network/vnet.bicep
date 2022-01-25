@@ -70,6 +70,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   }
 }
 
+output vnetId string = virtualNetwork.id
 output gatewaySubnetId string = virtualNetwork.properties.subnets[0].id
 output bastionSubnetId string = virtualNetwork.properties.subnets[1].id
 output publicSubnetId string = virtualNetwork.properties.subnets[2].id

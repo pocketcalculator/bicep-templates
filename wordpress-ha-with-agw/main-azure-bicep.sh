@@ -10,7 +10,7 @@ vnetCIDRPrefix=10.0
 adminUsername=azureuser
 adminPassword=cHanG3-pA55w0rrD!!!
 mySqlHwFamily=Gen5
-# Private Endpoint supported only on General Purpose
+# Private Endpoint supported only on General Purpose, settings below for low cost db
 # mySqlHwName=B_Gen5_1
 # mySqlvCoreCapacity=1
 # mySqlHwTier=Basic
@@ -35,7 +35,7 @@ echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier
 echo mySqlvCoreCapacity = $mySqlvCoreCapacity
 echo mySqlAdminLogin = $mySqlAdminLogin
-echo mySqlAdminPassword = '************'
+echo mySqlAdminPassword = '**********'
 
 echo "Creating deployment for ${environment} ${application} environment..."
 az deployment group create \

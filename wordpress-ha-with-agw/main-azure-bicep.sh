@@ -29,7 +29,6 @@ echo resourceGroupName = $resourceGroupName
 echo vnetCIDRPrefix = $vnetCIDRPrefix
 echo adminUsername = $adminUsername
 echo adminPassword = '**********'
-echo dbServerName = $dbServerName
 echo mySqlHwFamily = $mySqlHwFamily
 echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier

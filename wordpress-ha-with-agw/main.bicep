@@ -60,6 +60,7 @@ module privateEndpoints './network/privateEndpoints.bicep' = {
     environment: environment
     fileShareId: nfsshare.outputs.nfsShareId
     mySQLId: mysql.outputs.mySQLId
+    vnetId: vnet.outputs.vnetId
     privateSubnetId: vnet.outputs.privateSubnetId
     dbSubnetId: vnet.outputs.dbSubnetId
   }

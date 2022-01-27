@@ -88,10 +88,10 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
         name: 'webHttpListener'
         properties: {
           frontendIPConfiguration: {
-            id: concat(agwId, '/frontendIPConfigurations/agw-frontEndIPConfig')
+            id: '${agwId}/frontendIPConfigurations/agw-frontEndIPConfig'
           }
           frontendPort: {
-            id: concat(agwId, '/frontendPorts/http80')
+            id: '${agwId}/frontendPorts/http80'
           }
           protocol: 'Http'
           sslCertificate: null
@@ -104,13 +104,13 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
         properties: {
           ruleType: 'Basic'
           httpListener: {
-            id: concat(agwId, '/httpListeners/webHttpListener')
+            id: '${agwId}/httpListeners/webHttpListener'
           }
           backendAddressPool: {
-            id: concat(agwId, '/backendAddressPools/backend-web')
+            id: '${agwId}/backendAddressPools/backend-web'
           }
           backendHttpSettings: {
-            id: concat(agwId, '/backendHttpSettingsCollection/webServerHttp80')
+            id: '${agwId}/backendHttpSettingsCollection/webServerHttp80'
           }
         }
       }

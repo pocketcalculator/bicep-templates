@@ -12,6 +12,9 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
     name: storageAccountSku
   }
   kind: 'FileStorage'
+  properties: {
+    supportsHttpsTrafficOnly: false
+  }
 
   resource fileService 'fileServices@2021-06-01' existing = {
     name: 'default'

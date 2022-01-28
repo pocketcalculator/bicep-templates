@@ -8,7 +8,7 @@ owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
 kvResourceGroup=rg-keyvault-$environment-$location
-kvName=kv=
+kvName=
 adminUsername=azureuser
 mySqlHwFamily=Gen5
 # Private Endpoint supported only on General Purpose, settings below for low cost db

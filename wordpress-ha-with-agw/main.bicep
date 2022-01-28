@@ -1,13 +1,12 @@
 param location string = resourceGroup().location
 param application string
 param environment string
+param kvResourceGroup string
+param kvName string
 // Web Server
 @description('web server OS admin username')
 @secure()
 param adminUsername string
-@description('web server OS admin password')
-@secure()
-param adminPassword string
 // mySQL DB Server
 @description('db server hadware family')
 param mySqlHwFamily string
@@ -67,6 +66,11 @@ module privateEndpoints './network/privateEndpoints.bicep' = {
   name: 'privateendpoints'
 }
 
+resource kv 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
+  name: kvName
+  scope: resourceGroup(kvResourceGroup )
+}
+
 module mysql 'mysql/mySQL.bicep' = {
   params: {
     application: application
@@ -82,7 +86,6 @@ module mysql 'mysql/mySQL.bicep' = {
   name: 'mysql'
 }
 
-
 module webserver './compute/webVM.bicep' = {
   params: {
     privateSubnetId: vnet.outputs.privateSubnetId
@@ -90,7 +93,7 @@ module webserver './compute/webVM.bicep' = {
     application: application
     environment: environment
     adminUsername:  adminUsername
-    adminPassword: adminPassword
+    adminPassword: kv.getSecret('adminPassword')
   }
   name: 'webserver'
 }

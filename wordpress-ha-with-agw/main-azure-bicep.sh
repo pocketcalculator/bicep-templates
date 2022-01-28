@@ -7,6 +7,8 @@ environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
+kvResourceGroup=rg-keyvault-prod-eastus2
+kvName=kv=
 adminUsername=azureuser
 mySqlHwFamily=Gen5
 # Private Endpoint supported only on General Purpose, settings below for low cost db
@@ -26,6 +28,8 @@ echo environment = $environment
 echo owner = $owner
 echo resourceGroupName = $resourceGroupName
 echo vnetCIDRPrefix = $vnetCIDRPrefix
+echo kvResourceGroup = $kvResourceGroup
+echo kvName = $kvName
 echo adminUsername = $adminUsername
 echo mySqlHwFamily = $mySqlHwFamily
 echo mySqlHwName = $mySqlHwName
@@ -42,8 +46,9 @@ az deployment group create \
 	--parameters \
 		"application=$application" \
 		"environment=$environment" \
+		"kvResourceGroup=$kvResourceGroup" \
+		"kvName=$kvName" \
 		"adminUsername=$adminUsername" \
-		"adminPassword=$adminPassword" \
 		"mySqlHwFamily=$mySqlHwFamily" \
 		"mySqlHwName=$mySqlHwName" \
 		"mySqlHwTier=$mySqlHwTier" \

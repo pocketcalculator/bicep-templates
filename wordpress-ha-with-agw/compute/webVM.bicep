@@ -1,6 +1,7 @@
 param location string
 param application string
 param environment string
+@secure()
 param adminUsername string
 @secure()
 param adminPassword string
@@ -50,11 +51,6 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   }
 }
 
-resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' existing = {
-  name: 'kvName'
-  scope: resourceGroup(subscriptionId, kvResourceGroup )
-}
-
 resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: webServerVM
   location: location
@@ -65,13 +61,24 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
     osProfile: {
       computerName: webServerVM
       adminUsername: adminUsername
-      adminPassword: kv.getSecret('adminPassword')
+      adminPassword: adminPassword
+      linuxConfiguration: {
+        disablePasswordAuthentication: true
+        ssh: {
+          publicKeys: [
+            {
+              path: '/home/${adminUsername}/.ssh/authorized_keys'
+              keyData: adminPassword
+            }
+          ]
+        }
+      }
     }
     storageProfile: {
       imageReference: {
         publisher: 'Canonical'
         offer: 'UbuntuServer'
-        sku: '18.04-LTS'
+//        sku: '18.04-LTS'
         version: 'latest'
       }
       osDisk: {

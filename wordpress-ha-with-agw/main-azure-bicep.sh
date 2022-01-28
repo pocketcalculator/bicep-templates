@@ -8,7 +8,6 @@ owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
 adminUsername=azureuser
-adminPassword=cHanG3-pA55w0rrD!!!
 mySqlHwFamily=Gen5
 # Private Endpoint supported only on General Purpose, settings below for low cost db
 # mySqlHwName=B_Gen5_1
@@ -28,7 +27,6 @@ echo owner = $owner
 echo resourceGroupName = $resourceGroupName
 echo vnetCIDRPrefix = $vnetCIDRPrefix
 echo adminUsername = $adminUsername
-echo adminPassword = '**********'
 echo mySqlHwFamily = $mySqlHwFamily
 echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier

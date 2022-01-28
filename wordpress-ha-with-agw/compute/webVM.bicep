@@ -2,6 +2,7 @@ param location string
 param application string
 param environment string
 param adminUsername string
+@secure()
 param adminPassword string
 param privateSubnetId string
 var webServerVM = 'web-${application}-${environment}-${location}'
@@ -49,6 +50,11 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   }
 }
 
+resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' existing = {
+  name: 'kvName'
+  scope: resourceGroup(subscriptionId, kvResourceGroup )
+}
+
 resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: webServerVM
   location: location
@@ -59,7 +65,7 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
     osProfile: {
       computerName: webServerVM
       adminUsername: adminUsername
-      adminPassword: adminPassword
+      adminPassword: kv.getSecret('adminPassword')
     }
     storageProfile: {
       imageReference: {

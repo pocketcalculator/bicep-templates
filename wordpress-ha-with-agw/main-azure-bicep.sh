@@ -7,7 +7,7 @@ environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
-kvResourceGroup=rg-keyvault-prod-eastus2
+kvResourceGroup=rg-keyvault-$environment-$location
 kvName=kv=
 adminUsername=azureuser
 mySqlHwFamily=Gen5

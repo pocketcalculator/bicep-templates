@@ -18,8 +18,6 @@ param mySqlvCoreCapacity int
 param mySqlHwTier string
 @secure()
 param mySqlAdminLogin string
-@secure()
-param mySqlAdminPassword string
 
 module nsg './network/networkSecurityGroup.bicep' = {
   params: {
@@ -68,7 +66,7 @@ module privateEndpoints './network/privateEndpoints.bicep' = {
 
 resource kv 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   name: kvName
-  scope: resourceGroup(kvResourceGroup )
+  scope: resourceGroup(kvResourceGroup)
 }
 
 module mysql 'mysql/mySQL.bicep' = {
@@ -81,7 +79,7 @@ module mysql 'mysql/mySQL.bicep' = {
     mySqlHwTier: mySqlHwTier
     mySqlvCoreCapacity: mySqlvCoreCapacity
     mySqlAdminLogin: mySqlAdminLogin
-    mySqlAdminPassword: mySqlAdminPassword
+    mySqlAdminPassword: kv.getSecret('mySqlAdminPassword')
   }
   name: 'mysql'
 }
@@ -94,6 +92,7 @@ module webserver './compute/webVM.bicep' = {
     environment: environment
     adminUsername:  adminUsername
     adminPassword: kv.getSecret('adminPassword')
+    customData: base64(loadTextContent('./compute/cloudInit.txt'))
   }
   name: 'webserver'
 }

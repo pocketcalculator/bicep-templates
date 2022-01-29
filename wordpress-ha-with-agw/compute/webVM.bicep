@@ -5,6 +5,7 @@ param environment string
 param adminUsername string
 @secure()
 param adminPassword string
+param customData string
 param privateSubnetId string
 var webServerVM = 'web-${application}-${environment}-${location}'
 var webNICName = 'nic-${webServerVM}'
@@ -73,12 +74,13 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
           ]
         }
       }
+      customData: customData
     }
     storageProfile: {
       imageReference: {
         publisher: 'Canonical'
-        offer: 'UbuntuServer'
-//        sku: '18.04-LTS'
+        offer: '0001-com-ubuntu-server-focal'
+        sku: '20_04-lts-gen2'
         version: 'latest'
       }
       osDisk: {

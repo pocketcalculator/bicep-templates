@@ -7,7 +7,7 @@ environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
-kvResourceGroup=rg-keyvault-$environment-$location
+kvResourceGroup=
 kvName=
 adminUsername=azureuser
 mySqlHwFamily=Gen5
@@ -19,7 +19,6 @@ mySqlHwName=GP_Gen5_2
 mySqlvCoreCapacity=2
 mySqlHwTier=GeneralPurpose
 mySqlAdminLogin=mysqldbadmin
-mySqlAdminPassword=pA55w0rrD!!!
 
 echo subscription = $subscription
 echo location = $location
@@ -36,7 +35,6 @@ echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier
 echo mySqlvCoreCapacity = $mySqlvCoreCapacity
 echo mySqlAdminLogin = $mySqlAdminLogin
-echo mySqlAdminPassword = '**********'
 
 echo "Creating deployment for ${environment} ${application} environment..."
 az deployment group create \
@@ -53,6 +51,5 @@ az deployment group create \
 		"mySqlHwName=$mySqlHwName" \
 		"mySqlHwTier=$mySqlHwTier" \
 		"mySqlvCoreCapacity=$mySqlvCoreCapacity" \
-		"mySqlAdminLogin=$mySqlAdminLogin" \
-		"mySqlAdminPassword=$mySqlAdminPassword"		
+		"mySqlAdminLogin=$mySqlAdminLogin"	
 echo "Deployment for ${environment} ${application} environment is complete."

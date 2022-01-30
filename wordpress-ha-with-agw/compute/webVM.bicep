@@ -7,12 +7,12 @@ param adminUsername string
 param adminPassword string
 param customData string
 param privateSubnetId string
-var webServerVM = 'web-${application}-${environment}-${location}'
-var webNICName = 'nic-${webServerVM}'
+var webServerName = 'web-${application}-${environment}-${location}'
+var webNICName = 'nic-${webServerName}'
 var ipConfigName = 'ipconfig0-${webNICName}'
-var publicIPAddressName = 'ip-${webServerVM}'
-var osDiskName = 'disk-os-${webServerVM}'
-var dnsLabelPrefix = toLower('${webServerVM}')
+var publicIPAddressName = 'ip-${webServerName}'
+var osDiskName = 'disk-os-${webServerName}'
+var dnsLabelPrefix = toLower('${webServerName}')
 var osDiskType = 'Standard_LRS'
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
@@ -53,14 +53,14 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
 }
 
 resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: webServerVM
+  name: webServerName
   location: location
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B2s'
     }
     osProfile: {
-      computerName: webServerVM
+      computerName: webServerName
       adminUsername: adminUsername
       adminPassword: adminPassword
       linuxConfiguration: {

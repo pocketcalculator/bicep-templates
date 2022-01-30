@@ -1,7 +1,7 @@
 param location string = resourceGroup().location
 param application string
 param environment string
-var storageAccountName = 'nfsshare${uniqueString(resourceGroup().id)}'
+var storageAccountName = 'nfs-${application}-${environment}-${location}'
 var nfsShareName = 'nfsshare'
 var storageAccountSku = 'Premium_ZRS'
 

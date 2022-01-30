@@ -24,7 +24,7 @@ mySqlHwTier=GeneralPurpose
 # mySqlHwTier=Basic
 mySqlAdminLogin=mysqldbadmin
 # storage variables
-
+nfsStorageAccountName = "nfs-$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
 echo subscription = $subscription
 echo location = $location
 echo application = $application
@@ -40,6 +40,7 @@ echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier
 echo mySqlvCoreCapacity = $mySqlvCoreCapacity
 echo mySqlAdminLogin = $mySqlAdminLogin
+echo nfsStorageAccountName = $nfsStorageAccountName
 
 cat << EOF > ./compute/cloudInit.txt
 #cloud-config
@@ -138,7 +139,7 @@ write_files:
 
 runcmd: 
   - mkdir -p /data/nfs/wordpress
-  - mount -t nfs nfs-$application-$environment-$location.file.core.windows.net:/nfs-$application-$environment/nfsshare /data/nfs -o vers=4,minorversion=1,sec=sys
+  - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare /data/nfs -o vers=4,minorversion=1,sec=sys
   - wget http://wordpress.org/latest.tar.gz -P /data/nfs/wordpress
   - tar xzvf /data/nfs/wordpress/latest.tar.gz -C /data/nfs/wordpress --strip-components=1
   - cp /tmp/phpinfo.php /var/www/html
@@ -163,5 +164,6 @@ az deployment group create \
 		"mySqlHwName=$mySqlHwName" \
 		"mySqlHwTier=$mySqlHwTier" \
 		"mySqlvCoreCapacity=$mySqlvCoreCapacity" \
-		"mySqlAdminLogin=$mySqlAdminLogin"	
+		"mySqlAdminLogin=$mySqlAdminLogin" \
+    "nfsStorageAccountName=$nfsStorageAccountName"
 echo "Deployment for ${environment} ${application} environment is complete."

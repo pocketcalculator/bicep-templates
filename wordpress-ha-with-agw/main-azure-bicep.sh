@@ -13,7 +13,7 @@ kvResourceGroup=
 kvName=
 # linuux vm variables
 adminUsername=azureuser
-# mysql variables
+# mysql server variables
 mySqlHwFamily=Gen5
 mySqlHwName=GP_Gen5_2
 mySqlvCoreCapacity=2
@@ -23,8 +23,13 @@ mySqlHwTier=GeneralPurpose
 # mySqlvCoreCapacity=1
 # mySqlHwTier=Basic
 mySqlAdminLogin=mysqldbadmin
+# wordpress db variables
+wordpressDBName=wordpressdb
+wordpressDBUser=wordpressadmin
 # storage variables
-nfsStorageAccountName = "nfs-$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
+nfsStorageAccountName="nfs$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
+nfsShareName=nfsshare
+
 echo subscription = $subscription
 echo location = $location
 echo application = $application
@@ -40,7 +45,10 @@ echo mySqlHwName = $mySqlHwName
 echo mySqlHwTier = $mySqlHwTier
 echo mySqlvCoreCapacity = $mySqlvCoreCapacity
 echo mySqlAdminLogin = $mySqlAdminLogin
+echo wordpressDBName = $wordpressDBName
+echo wordpressDBUser = $wordpressDBUser
 echo nfsStorageAccountName = $nfsStorageAccountName
+echo nfsShareName = $nfsShareName
 
 cat << EOF > ./compute/cloudInit.txt
 #cloud-config
@@ -48,6 +56,7 @@ package_upgrade: true
 packages:
   - binutils
   - curl
+  - mysql-client
   - sysstat
   - collectd
   - collectd-utils
@@ -74,9 +83,7 @@ write_files:
 
 - path: /tmp/phpinfo.php
   content: |
-    <?php 
-    phpinfo (); 
-    ?>
+    <?php phpinfo(); ?>
 
 - path: /tmp/heartbeat.php
   content: |
@@ -85,18 +92,16 @@ write_files:
             <p>
                 site is running.
             </p>
-            <?php 
-				echo gethostname(); 
-			?>
+            <?php echo gethostname(); ?>
         </body>
     </html>
 
 - path: /tmp/wp-config.php
   content: |
       <?php
-      define('DB_NAME', 'mysqldb-$application-$environment-$location');
-      define('DB_USER', '$mySqlAdminLogin');
-      define('DB_PASSWORD', '$dbpassword');
+      define('DB_NAME', '$wordpressDBName');
+      define('DB_USER', '$wordpressDBUser@$mysqldb-$application-$environment-$location');
+      define('DB_PASSWORD', 'enter_wordpress_db_password_here');
       define('DB_HOST', 'mysqldb-$application-$environment-$location.mysql.database.azure.com');
       \$table_prefix = 'wp_';
       if ( ! defined( 'ABSPATH' ) ) {
@@ -137,15 +142,20 @@ write_files:
 
    }
 
-runcmd: 
+runcmd:
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb            
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-common_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb ./mysql-common_8.0.26-1ubuntu20.04_amd64.deb
   - mkdir -p /data/nfs/wordpress
   - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare /data/nfs -o vers=4,minorversion=1,sec=sys
   - wget http://wordpress.org/latest.tar.gz -P /data/nfs/wordpress
   - tar xzvf /data/nfs/wordpress/latest.tar.gz -C /data/nfs/wordpress --strip-components=1
-  - cp /tmp/phpinfo.php /var/www/html
-  - cp /tmp/heartbeat.php /var/www/html
+  - cp /tmp/phpinfo.php /data/nfs/wordpress/phpinfo.php
+  - cp /tmp/heartbeat.php /data/nfs/wordpress/heartbeat.php
   - cp /tmp/wp-config.php /data/nfs/wordpress/wp-config.php
-  - cp /tmp/wordpress.conf  /etc/nginx/conf.d/wordpress.conf
+  - cp /tmp/wordpress.conf  /data/nfs/wordpress/wordpress.conf
   - chown -R www-data:www-data /data/nfs/wordpress
 EOF
 
@@ -165,5 +175,6 @@ az deployment group create \
 		"mySqlHwTier=$mySqlHwTier" \
 		"mySqlvCoreCapacity=$mySqlvCoreCapacity" \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
-    "nfsStorageAccountName=$nfsStorageAccountName"
+    "nfsStorageAccountName=$nfsStorageAccountName" \
+    "nfsShareName=$nfsShareName"
 echo "Deployment for ${environment} ${application} environment is complete."

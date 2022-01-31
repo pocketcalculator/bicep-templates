@@ -1,6 +1,7 @@
 param location string = resourceGroup().location
 param application string
 param environment string
+// Keyvault
 param kvResourceGroup string
 param kvName string
 // Web Server
@@ -18,6 +19,9 @@ param mySqlvCoreCapacity int
 param mySqlHwTier string
 @secure()
 param mySqlAdminLogin string
+// Storage
+param nfsStorageAccountName string
+param nfsShareName string
 
 module nsg './network/networkSecurityGroup.bicep' = {
   params: {
@@ -44,8 +48,8 @@ module vnet './network/vnet.bicep' = {
 module nfsshare './storage/nfsShare.bicep' = {
   params: {
     location: location
-    application: application
-    environment: environment
+    nfsStorageAccountName: nfsStorageAccountName
+    nfsShareName: nfsShareName
   }
   name: 'nfsshare'
 }

@@ -16,4 +16,4 @@ az deployment group create \
 	--name rg-$application-$environment-$location-deployment \
 	--resource-group rg-$application-$environment-$location \
 	--template-file ./rgPurge.bicep
-echo "Deployment for ${environment} ${application} resource group is complete."
+echo "${environment} ${application} resource group has been purged."

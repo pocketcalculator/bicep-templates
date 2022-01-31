@@ -29,6 +29,7 @@ resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
     infrastructureEncryption: 'Disabled'
     minimalTlsVersion: 'TLS1_2'
     sslEnforcement: 'Enabled'
+    publicNetworkAccess: 'Disabled'
     storageProfile: {
       backupRetentionDays: 7
       geoRedundantBackup: 'Disabled'

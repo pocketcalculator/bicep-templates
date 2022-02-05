@@ -24,8 +24,11 @@ mySqlHwTier=GeneralPurpose
 # mySqlHwTier=Basic
 mySqlAdminLogin=mysqldbadmin
 # wordpress db variables
-wordpressDBName=wordpressdb
-wordpressDBUser=wordpressadmin
+wordpressDBName=
+wordpressDBUser=
+wordpressDBPassword=
+wordpressTablePrefix=wp_
+wordpressDocRoot=/var/www/wordpress
 # storage variables
 nfsStorageAccountName="nfs$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
 nfsShareName=nfsshare
@@ -47,6 +50,9 @@ echo mySqlvCoreCapacity = $mySqlvCoreCapacity
 echo mySqlAdminLogin = $mySqlAdminLogin
 echo wordpressDBName = $wordpressDBName
 echo wordpressDBUser = $wordpressDBUser
+echo wordpressDBPassword = $wordpressDBPassword
+echo wordpressTablePrefix = $wordpressTablePrefix
+echo wordpressDocRoot = $wordpressDocRoot
 echo nfsStorageAccountName = $nfsStorageAccountName
 echo nfsShareName = $nfsShareName
 
@@ -62,6 +68,7 @@ packages:
   - collectd-utils
   - ghostscript
   - apache2
+  - openssl
   - php
   - libapache2-mod-php
   - php-bcmath
@@ -101,22 +108,32 @@ write_files:
       <?php
       define('DB_NAME', '$wordpressDBName');
       define('DB_USER', '$wordpressDBUser@$mysqldb-$application-$environment-$location');
-      define('DB_PASSWORD', 'enter_wordpress_db_password_here');
+      define('DB_PASSWORD', '$wordpressDBPassword');
       define('DB_HOST', 'mysqldb-$application-$environment-$location.mysql.database.azure.com');
-      \$table_prefix = 'wp_';
+      define( 'DB_CHARSET', 'utf8' );
+      define( 'DB_COLLATE', '' );
+      define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+      define('FORCE_SSL_ADMIN', true);
+      
+      // in some setups HTTP_X_FORWARDED_PROTO might contain 
+      // a comma-separated list e.g. http,https
+      // so check for https existence
+      if ( strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) $_SERVER['HTTPS']='on';
+      \$table_prefix = '$wordpressTablePrefix';
+
       if ( ! defined( 'ABSPATH' ) ) {
         define( 'ABSPATH', __DIR__ . '/' );
       }
-      require_once ABSPATH . 'wp-settings.php';
-      ?>
 
+      require_once ABSPATH . 'wp-settings.php';
+       ?>
 
 - path: /tmp/wordpress.conf
   content: |
    server {
       listen 80;
       server_name _;
-      root /data/nfs/wordpress;
+      root $wordpressDocRoot;
 
       index index.html index.htm index.php;
 
@@ -148,15 +165,18 @@ runcmd:
   - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb
   - cd /tmp; wget -c https://dev.mysql.com/get/mysql-common_8.0.26-1ubuntu20.04_amd64.deb
   - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb ./mysql-common_8.0.26-1ubuntu20.04_amd64.deb
-  - mkdir -p /data/nfs/wordpress
-  - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare /data/nfs -o vers=4,minorversion=1,sec=sys
-  - wget http://wordpress.org/latest.tar.gz -P /data/nfs/wordpress
-  - tar xzvf /data/nfs/wordpress/latest.tar.gz -C /data/nfs/wordpress --strip-components=1
-  - cp /tmp/phpinfo.php /data/nfs/wordpress/phpinfo.php
-  - cp /tmp/heartbeat.php /data/nfs/wordpress/heartbeat.php
-  - cp /tmp/wp-config.php /data/nfs/wordpress/wp-config.php
-  - cp /tmp/wordpress.conf  /data/nfs/wordpress/wordpress.conf
-  - chown -R www-data:www-data /data/nfs/wordpress
+  - mkdir -p $wordpressDocRoot
+  - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare $wordpressDocRoot -o vers=4,minorversion=1,sec=sys
+  - /usr/bin/wget http://wordpress.org/latest.tar.gz -P $wordpressDocRoot
+  - /usr/bin/wget https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem -P /usr/local/share/ca-certificates
+  - /usr/bin/openssl x509 -outform der -in /usr/local/share/ca-certificates/BaltimoreCyberTrustRoot.crt.pem -out /usr/local/share/ca-certificates/certificate.crt
+  - /usr/sbin/update-ca-certificates
+  - tar xzvf $wordpressDocRoot/latest.tar.gz -C $wordpressDocRoot --strip-components=1
+  - cp /tmp/phpinfo.php $wordpressDocRoot/phpinfo.php
+  - cp /tmp/heartbeat.php $wordpressDocRoot/heartbeat.php
+  - cp /tmp/wp-config.php $wordpressDocRoot/wp-config.php
+  - cp /tmp/wordpress.conf  $wordpressDocRoot/wordpress.conf
+  - chown -R www-data:www-data $wordpressDocRoot
 EOF
 
 echo "Creating deployment for ${environment} ${application} environment..."

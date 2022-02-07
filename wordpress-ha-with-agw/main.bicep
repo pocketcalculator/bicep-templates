@@ -106,7 +106,6 @@ module agw './network/applicationGateway.bicep' = {
     publicSubnetId: vnet.outputs.publicSubnetId
     application: application
     environment: environment
-    webServerId: webserver.outputs.webServerId
     webServerIP: webserver.outputs.webServerIP
   }
   name: 'agw'

@@ -24,11 +24,12 @@ mySqlHwTier=GeneralPurpose
 # mySqlHwTier=Basic
 mySqlAdminLogin=mysqldbadmin
 # wordpress db variables
-wordpressDBName=
-wordpressDBUser=
+wordpressDBName=wordpressdb
+wordpressDBUser=wordpress
 wordpressDBPassword=
 wordpressTablePrefix=wp_
-wordpressDocRoot=/var/www/wordpress
+wordpressDomainName=wordpress.com
+wordpressDocRoot=/var/www/$wordpressDomainName/public_html
 # storage variables
 nfsStorageAccountName="nfs$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
 nfsShareName=nfsshare
@@ -52,6 +53,7 @@ echo wordpressDBName = $wordpressDBName
 echo wordpressDBUser = $wordpressDBUser
 echo wordpressDBPassword = $wordpressDBPassword
 echo wordpressTablePrefix = $wordpressTablePrefix
+echo wordpressDomainName = $wordpressDomainName
 echo wordpressDocRoot = $wordpressDocRoot
 echo nfsStorageAccountName = $nfsStorageAccountName
 echo nfsShareName = $nfsShareName
@@ -107,7 +109,7 @@ write_files:
   content: |
       <?php
       define('DB_NAME', '$wordpressDBName');
-      define('DB_USER', '$wordpressDBUser@$mysqldb-$application-$environment-$location');
+      define('DB_USER', '$wordpressDBUser@mysqldb-$application-$environment-$location');
       define('DB_PASSWORD', '$wordpressDBPassword');
       define('DB_HOST', 'mysqldb-$application-$environment-$location.mysql.database.azure.com');
       define( 'DB_CHARSET', 'utf8' );
@@ -118,7 +120,7 @@ write_files:
       // in some setups HTTP_X_FORWARDED_PROTO might contain 
       // a comma-separated list e.g. http,https
       // so check for https existence
-      if ( strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) $_SERVER['HTTPS']='on';
+      // if ( strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) $_SERVER['HTTPS']='on';
       \$table_prefix = '$wordpressTablePrefix';
 
       if ( ! defined( 'ABSPATH' ) ) {
@@ -128,36 +130,19 @@ write_files:
       require_once ABSPATH . 'wp-settings.php';
        ?>
 
-- path: /tmp/wordpress.conf
+- path: /tmp/$wordpressDomainName.conf
   content: |
-   server {
-      listen 80;
-      server_name _;
-      root $wordpressDocRoot;
+    <VirtualHost *:80>
 
-      index index.html index.htm index.php;
+      ServerAdmin webmaster@$wordpressDomainName
+      ServerName $wordpressDomainName
+      ServerAlias www.$wordpressDomainName
+      DocumentRoot $wordpressDocRoot
 
-      location / {
-          try_files \$uri \$uri/ /index.php\$is_args\$args;
-      }
+      ErrorLog /var/log/apache2/$wordpressDomainName-error.log
+      CustomLog /var/log/apache2/$wordpressDomainName-access.log combined
 
-      location ~ \.php$ {
-          include snippets/fastcgi-php.conf;
-          fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
-      }
-
-      location = /favicon.ico { log_not_found off; access_log off; }
-      location = /robots.txt { log_not_found off; access_log off; allow all; }
-      location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
-        expires max;
-        log_not_found off;
-      }
-
-      location ~ /\.ht {
-          deny all;
-      }
-
-   }
+    </VirtualHost>
 
 runcmd:
   - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb
@@ -175,8 +160,12 @@ runcmd:
   - cp /tmp/phpinfo.php $wordpressDocRoot/phpinfo.php
   - cp /tmp/heartbeat.php $wordpressDocRoot/heartbeat.php
   - cp /tmp/wp-config.php $wordpressDocRoot/wp-config.php
-  - cp /tmp/wordpress.conf  $wordpressDocRoot/wordpress.conf
+  - cp /tmp/$wordpressDomainName.conf  /etc/apache2/sites-available/$wordpressDomainName.conf
   - chown -R www-data:www-data $wordpressDocRoot
+  - a2ensite $wordpressDomainName
+  - a2dissite 000-default.conf
+  - systemctl restart apache2
+
 EOF
 
 echo "Creating deployment for ${environment} ${application} environment..."

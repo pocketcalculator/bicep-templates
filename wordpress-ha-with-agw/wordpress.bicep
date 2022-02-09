@@ -21,6 +21,7 @@ param mySqlHwTier string
 param mySqlAdminLogin string
 // Storage
 param nfsStorageAccountName string
+param blobStorageAccountName string
 param nfsShareName string
 
 module nsg './network/networkSecurityGroup.bicep' = {
@@ -52,6 +53,14 @@ module nfsshare './storage/nfsShare.bicep' = {
     nfsShareName: nfsShareName
   }
   name: 'nfsshare'
+}
+
+module blobStorage './storage/blobContent.bicep' = {
+  params: {
+    location: location
+    blobStorageAccountName: blobStorageAccountName
+  }
+  name: 'blob'
 }
 
 module privateEndpoints './network/privateEndpoints.bicep' = {

@@ -31,7 +31,9 @@ wordpressTablePrefix=wp_
 wordpressDomainName=wordpress.com
 wordpressDocRoot=/var/www/$wordpressDomainName/public_html
 # storage variables
-nfsStorageAccountName="nfs$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
+storageSuffix="$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
+nfsStorageAccountName="nfs$storageSuffix"
+blobStorageAccountName="blob$storageSuffix"
 nfsShareName=nfsshare
 
 echo subscription = $subscription
@@ -56,6 +58,7 @@ echo wordpressTablePrefix = $wordpressTablePrefix
 echo wordpressDomainName = $wordpressDomainName
 echo wordpressDocRoot = $wordpressDocRoot
 echo nfsStorageAccountName = $nfsStorageAccountName
+echo blobStorageAccountName = $blobStorageAccountName
 echo nfsShareName = $nfsShareName
 
 cat << EOF > ./compute/cloudInit.txt
@@ -172,7 +175,7 @@ echo "Creating deployment for ${environment} ${application} environment..."
 az deployment group create \
 	--resource-group $resourceGroupName \
 	--name $application-deployment \
-	--template-file ./main.bicep \
+	--template-file ./wordpress.bicep \
 	--parameters \
 		"application=$application" \
 		"environment=$environment" \
@@ -185,5 +188,6 @@ az deployment group create \
 		"mySqlvCoreCapacity=$mySqlvCoreCapacity" \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
     "nfsStorageAccountName=$nfsStorageAccountName" \
+    "blobStorageAccountName=$blobStorageAccountName" \
     "nfsShareName=$nfsShareName"
 echo "Deployment for ${environment} ${application} environment is complete."

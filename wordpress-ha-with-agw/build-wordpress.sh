@@ -90,6 +90,8 @@ packages:
   - php-fpm
   - php-mysql
   - nfs-common
+  - certbot
+  - python3-certbot-apache
 
 write_files:
 
@@ -155,10 +157,10 @@ runcmd:
   - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb ./mysql-common_8.0.26-1ubuntu20.04_amd64.deb
   - mkdir -p $wordpressDocRoot
   - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare $wordpressDocRoot -o vers=4,minorversion=1,sec=sys
-  - /usr/bin/wget http://wordpress.org/latest.tar.gz -P $wordpressDocRoot
   - /usr/bin/wget https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem -P /usr/local/share/ca-certificates
   - /usr/bin/openssl x509 -outform der -in /usr/local/share/ca-certificates/BaltimoreCyberTrustRoot.crt.pem -out /usr/local/share/ca-certificates/certificate.crt
   - /usr/sbin/update-ca-certificates
+  - /usr/bin/wget http://wordpress.org/latest.tar.gz -P $wordpressDocRoot
   - tar xzvf $wordpressDocRoot/latest.tar.gz -C $wordpressDocRoot --strip-components=1
   - cp /tmp/phpinfo.php $wordpressDocRoot/phpinfo.php
   - cp /tmp/heartbeat.php $wordpressDocRoot/heartbeat.php
@@ -168,7 +170,6 @@ runcmd:
   - a2ensite $wordpressDomainName
   - a2dissite 000-default.conf
   - systemctl restart apache2
-
 EOF
 
 echo "Creating deployment for ${environment} ${application} environment..."

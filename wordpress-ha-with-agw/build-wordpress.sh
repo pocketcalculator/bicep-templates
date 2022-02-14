@@ -125,7 +125,8 @@ write_files:
       // in some setups HTTP_X_FORWARDED_PROTO might contain 
       // a comma-separated list e.g. http,https
       // so check for https existence
-      // if ( strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) $_SERVER['HTTPS']='on';
+      // if ( strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) 
+      //   $_SERVER['HTTPS']='on';
       \$table_prefix = '$wordpressTablePrefix';
 
       if ( ! defined( 'ABSPATH' ) ) {
@@ -143,10 +144,19 @@ write_files:
       ServerName $wordpressDomainName
       ServerAlias www.$wordpressDomainName
       DocumentRoot $wordpressDocRoot
-
+      LogLevel warn
       ErrorLog /var/log/apache2/$wordpressDomainName-error.log
       CustomLog /var/log/apache2/$wordpressDomainName-access.log combined
-
+      <Directory $wordpressDocRoot>
+        Options FollowSymLinks
+        AllowOverride Limit Options FileInfo
+        DirectoryIndex index.php index.html
+        Require all granted
+      </Directory>
+      <Directory $wordpressDocRoot/wp-content>
+        Options FollowSymLinks
+        Require all granted
+      </Directory>
     </VirtualHost>
 
 runcmd:

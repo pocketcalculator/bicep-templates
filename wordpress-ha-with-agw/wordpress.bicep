@@ -22,6 +22,7 @@ param mySqlAdminLogin string
 // Storage
 param nfsStorageAccountName string
 param blobStorageAccountName string
+param logAnalyticsStorageAccountName string
 param nfsShareName string
 
 module nsg './network/networkSecurityGroup.bicep' = {
@@ -55,10 +56,11 @@ module nfsshare './storage/nfsShare.bicep' = {
   name: 'nfsshare'
 }
 
-module blobStorage './storage/blobContent.bicep' = {
+module blobStorage './storage/blobStorage.bicep' = {
   params: {
     location: location
     blobStorageAccountName: blobStorageAccountName
+    logAnalyticsStorageAccountName: logAnalyticsStorageAccountName
   }
   name: 'blob'
 }
@@ -112,10 +114,20 @@ module webserver './compute/webVM.bicep' = {
 
 module agw './network/applicationGateway.bicep' = {
   params: {
+    location: location
     publicSubnetId: vnet.outputs.publicSubnetId
     application: application
     environment: environment
     webServerIP: webserver.outputs.webServerIP
   }
   name: 'agw'
+}
+
+module logAnalytics './monitor/logAnalytics.bicep' = {
+  params: {
+    location: location
+    application: application
+    environment: environment
+  }
+  name: 'loganalytics'
 }

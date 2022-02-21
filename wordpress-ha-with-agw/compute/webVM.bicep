@@ -101,8 +101,18 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
     }
     diagnosticsProfile: {
       bootDiagnostics: {
-        enabled: false
+        enabled: true
       }
+    }
+  }
+  resource dependencyAgentExtension 'Extensions' = {
+    name: 'DAExtension'
+    location: location
+    properties: {
+      publisher: 'Microsoft.Azure.Monitoring.DependencyAgent'
+      type: 'DependencyAgentLinux'
+      typeHandlerVersion: '9.5'
+      autoUpgradeMinorVersion: true
     }
   }
 }

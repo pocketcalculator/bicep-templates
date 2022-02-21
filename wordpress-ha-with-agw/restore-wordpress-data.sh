@@ -18,7 +18,7 @@ localIP=`wget -O - v4.ident.me 2>/dev/null`
 az mysql server update --resource-group $resourceGroupName --name $dbServerName --public Enabled
 az mysql server firewall-rule create --resource-group $resourceGroupName --server $dbServerName --name "AllowAll" --start-ip-address $localIP --end-ip-address $localIP
 # create target wordpress DB here
-mysql -h $dbServerName.mysql.database.azure.com -u$mysqlAdminLogin@$dbServerName -p$mysqlAdminPassword<<EOFMYSQL
+mysql --verbose -h $dbServerName.mysql.database.azure.com -u$mysqlAdminLogin@$dbServerName -p$mysqlAdminPassword<<EOFMYSQL
 CREATE DATABASE $wordpressDBName;
 CREATE USER '$wordpressDBUser'@'%' IDENTIFIED BY '$wordpressDBPassword';
 GRANT ALL PRIVILEGES ON $wordpressDBName . * TO '$wordpressDBUser'@'%';

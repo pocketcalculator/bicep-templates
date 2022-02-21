@@ -34,6 +34,7 @@ wordpressDocRoot=/var/www/$wordpressDomainName/public_html
 storageSuffix="$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
 nfsStorageAccountName="nfs$storageSuffix"
 blobStorageAccountName="blob$storageSuffix"
+logAnalyticsStorageAccountName="log$storageSuffix"
 nfsShareName=nfsshare
 
 echo subscription = $subscription
@@ -59,6 +60,7 @@ echo wordpressDomainName = $wordpressDomainName
 echo wordpressDocRoot = $wordpressDocRoot
 echo nfsStorageAccountName = $nfsStorageAccountName
 echo blobStorageAccountName = $blobStorageAccountName
+echo logAnalyticsStorageAccountName = $logAnalyticsStorageAccountName
 echo nfsShareName = $nfsShareName
 
 cat << EOF > ./compute/cloudInit.txt
@@ -92,6 +94,7 @@ packages:
   - nfs-common
   - certbot
   - python3-certbot-apache
+  - python2.7
 
 write_files:
 
@@ -179,7 +182,9 @@ runcmd:
   - chown -R www-data:www-data $wordpressDocRoot
   - a2ensite $wordpressDomainName
   - a2dissite 000-default.conf
-  - systemctl restart apache2
+  - systemctl reload apache2
+  - ln -s /usr/bin/python3 /usr/bin/python
+  - ln -s /usr/bin/python2.7 /usr/bin/python2
 EOF
 
 echo "Creating deployment for ${environment} ${application} environment..."
@@ -200,5 +205,6 @@ az deployment group create \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
     "nfsStorageAccountName=$nfsStorageAccountName" \
     "blobStorageAccountName=$blobStorageAccountName" \
+    "logAnalyticsStorageAccountName=$logAnalyticsStorageAccountName" \
     "nfsShareName=$nfsShareName"
 echo "Deployment for ${environment} ${application} environment is complete."

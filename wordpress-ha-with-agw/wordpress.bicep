@@ -128,6 +128,7 @@ module logAnalytics './monitor/logAnalytics.bicep' = {
     location: location
     application: application
     environment: environment
+    logAnalyticsStorageAccountNameId: blobStorage.outputs.logAnalyticsId
   }
   name: 'loganalytics'
 }

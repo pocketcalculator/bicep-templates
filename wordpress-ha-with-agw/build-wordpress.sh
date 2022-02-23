@@ -9,8 +9,8 @@ owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
 # key vault variables
-kvResourceGroup=
-kvName=
+kvResourceGroup=rg-keyvault-prod-eastus2
+kvName=kv-keyvault-prod-eastus2
 # linuux vm variables
 adminUsername=azureuser
 # mysql server variables
@@ -26,7 +26,7 @@ mySqlAdminLogin=mysqldbadmin
 # wordpress db variables
 wordpressDBName=wordpressdb
 wordpressDBUser=wordpress
-wordpressDBPassword=
+wordpressDBPassword=pA55w0rrD!!!
 wordpressTablePrefix=wp_
 wordpressDomainName=wordpress.com
 wordpressDocRoot=/var/www/$wordpressDomainName/public_html
@@ -95,6 +95,7 @@ packages:
   - certbot
   - python3-certbot-apache
   - python2.7
+  - python-is-python2
 
 write_files:
 
@@ -183,8 +184,6 @@ runcmd:
   - a2ensite $wordpressDomainName
   - a2dissite 000-default.conf
   - systemctl reload apache2
-  - ln -s /usr/bin/python3 /usr/bin/python
-  - ln -s /usr/bin/python2.7 /usr/bin/python2
 EOF
 
 echo "Creating deployment for ${environment} ${application} environment..."

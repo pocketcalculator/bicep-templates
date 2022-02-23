@@ -105,14 +105,15 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       }
     }
   }
-  resource dependencyAgentExtension 'Extensions' = {
-    name: 'DAExtension'
+  resource AzureMonitorLinuxAgent 'Extensions@2021-07-01' = {
+    name: 'AzureMonitorLinuxAgent'
     location: location
     properties: {
-      publisher: 'Microsoft.Azure.Monitoring.DependencyAgent'
-      type: 'DependencyAgentLinux'
-      typeHandlerVersion: '9.5'
+      publisher: 'Microsoft.Azure.Monitor'
+      type: 'AzureMonitorLinuxAgent'
+      enableAutomaticUpgrade: false
       autoUpgradeMinorVersion: true
+      typeHandlerVersion: '1.15'
     }
   }
 }

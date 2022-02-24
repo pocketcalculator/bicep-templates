@@ -9,8 +9,8 @@ owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
 # key vault variables
-kvResourceGroup=rg-keyvault-prod-eastus2
-kvName=kv-keyvault-prod-eastus2
+kvResourceGroup=
+kvName=
 # linuux vm variables
 adminUsername=azureuser
 # mysql server variables
@@ -26,7 +26,7 @@ mySqlAdminLogin=mysqldbadmin
 # wordpress db variables
 wordpressDBName=wordpressdb
 wordpressDBUser=wordpress
-wordpressDBPassword=pA55w0rrD!!!
+wordpressDBPassword=
 wordpressTablePrefix=wp_
 wordpressDomainName=wordpress.com
 wordpressDocRoot=/var/www/$wordpressDomainName/public_html

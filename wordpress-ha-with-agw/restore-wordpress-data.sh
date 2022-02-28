@@ -7,10 +7,10 @@ owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 dbServerName=mysqldb-$application-$environment-$location
 mysqlAdminLogin=mysqldbadmin
-mysqlAdminPassword=pA55w0rrD!!!
+mysqlAdminPassword=
 wordpressDBName=wordpressdb
 wordpressDBUser=wordpress
-wordpressDBPassword=pA55w0rrD!!!
+wordpressDBPassword=
 # get local IP
 localIP=`wget -O - v4.ident.me 2>/dev/null`
 

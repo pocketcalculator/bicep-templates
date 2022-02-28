@@ -108,6 +108,7 @@ module webserver './compute/webVM.bicep' = {
     adminUsername:  adminUsername
     adminPassword: kv.getSecret('adminPassword')
     customData: base64(loadTextContent('./compute/cloudInit.txt'))
+    vmDataCollectionRuleId: vmDataCollectionRule.outputs.vmDataCollectionRuleId
   }
   name: 'webserver'
 }
@@ -128,7 +129,17 @@ module logAnalytics './monitor/logAnalytics.bicep' = {
     location: location
     application: application
     environment: environment
-    logAnalyticsStorageAccountNameId: blobStorage.outputs.logAnalyticsId
   }
   name: 'loganalytics'
+}
+
+module vmDataCollectionRule './monitor/vmDataCollectionRule.bicep' = {
+  params: {
+    location: location
+    application: application
+    environment: environment
+    logAnalyticsWorkspaceName: logAnalytics.outputs.logAnalyticsWorkspaceName
+    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
+  }
+  name: 'vmDataCollectionRule'
 }

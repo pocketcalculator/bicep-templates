@@ -1,0 +1,120 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - binutils
+  - curl
+  - mysql-client
+  - sysstat
+  - collectd
+  - collectd-utils
+  - ghostscript
+  - apache2
+  - openssl
+  - php
+  - libapache2-mod-php
+  - php-bcmath
+  - php-curl
+  - php-imagick
+  - php-json
+  - php-gd
+  - php-intl
+  - php-mbstring
+  - php-soap
+  - php-xml
+  - php-xmlrpc
+  - php-zip
+  - php-fpm
+  - php-mysql
+  - nfs-common
+  - certbot
+  - python3-certbot-apache
+  - python2.7
+  - python-is-python2
+
+write_files:
+
+- path: /tmp/phpinfo.php
+  content: |
+    <?php phpinfo(); ?>
+
+- path: /tmp/heartbeat.php
+  content: |
+    <html>
+        <body>
+            <p>
+                site is running.
+            </p>
+            <?php echo gethostname(); ?>
+        </body>
+    </html>
+
+- path: /tmp/wp-config.php
+  content: |
+      <?php
+      define('DB_NAME', 'wordpressdb');
+      define('DB_USER', 'wordpress@mysqldb-application-dev-eastus2');
+      define('DB_PASSWORD', 'pA55w0rrD!!!');
+      define('DB_HOST', 'mysqldb-application-dev-eastus2.mysql.database.azure.com');
+      define( 'DB_CHARSET', 'utf8' );
+      define( 'DB_COLLATE', '' );
+      define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+      define('FORCE_SSL_ADMIN', true);
+      
+      // in some setups HTTP_X_FORWARDED_PROTO might contain 
+      // a comma-separated list e.g. http,https
+      // so check for https existence
+      // if ( strpos(['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) 
+      //   ['HTTPS']='on';
+      $table_prefix = 'wp_';
+
+      if ( ! defined( 'ABSPATH' ) ) {
+        define( 'ABSPATH', __DIR__ . '/' );
+      }
+
+      require_once ABSPATH . 'wp-settings.php';
+       ?>
+
+- path: /tmp/wordpress.com.conf
+  content: |
+    <VirtualHost *:80>
+
+      ServerAdmin webmaster@wordpress.com
+      ServerName wordpress.com
+      ServerAlias www.wordpress.com
+      DocumentRoot /var/www/wordpress.com/public_html
+      LogLevel warn
+      ErrorLog /var/log/apache2/wordpress.com-error.log
+      CustomLog /var/log/apache2/wordpress.com-access.log combined
+      <Directory /var/www/wordpress.com/public_html>
+        Options FollowSymLinks
+        AllowOverride Limit Options FileInfo
+        DirectoryIndex index.php index.html
+        Require all granted
+      </Directory>
+      <Directory /var/www/wordpress.com/public_html/wp-content>
+        Options FollowSymLinks
+        Require all granted
+      </Directory>
+    </VirtualHost>
+
+runcmd:
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb            
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-common_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb ./mysql-common_8.0.26-1ubuntu20.04_amd64.deb
+  - mkdir -p /var/www/wordpress.com/public_html
+  - mount -t nfs nfsapplication01041.file.core.windows.net:/nfsapplication01041/nfsshare /var/www/wordpress.com/public_html -o vers=4,minorversion=1,sec=sys
+  - /usr/bin/wget https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem -P /usr/local/share/ca-certificates
+  - /usr/bin/openssl x509 -outform der -in /usr/local/share/ca-certificates/BaltimoreCyberTrustRoot.crt.pem -out /usr/local/share/ca-certificates/certificate.crt
+  - /usr/sbin/update-ca-certificates
+  - /usr/bin/wget http://wordpress.org/latest.tar.gz -P /var/www/wordpress.com/public_html
+  - tar xzvf /var/www/wordpress.com/public_html/latest.tar.gz -C /var/www/wordpress.com/public_html --strip-components=1
+  - cp /tmp/phpinfo.php /var/www/wordpress.com/public_html/phpinfo.php
+  - cp /tmp/heartbeat.php /var/www/wordpress.com/public_html/heartbeat.php
+  - cp /tmp/wp-config.php /var/www/wordpress.com/public_html/wp-config.php
+  - cp /tmp/wordpress.com.conf  /etc/apache2/sites-available/wordpress.com.conf
+  - chown -R www-data:www-data /var/www/wordpress.com/public_html
+  - a2ensite wordpress.com
+  - a2dissite 000-default.conf
+  - systemctl reload apache2

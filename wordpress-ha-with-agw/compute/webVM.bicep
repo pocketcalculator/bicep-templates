@@ -7,6 +7,7 @@ param adminUsername string
 param adminPassword string
 param customData string
 param privateSubnetId string
+param vmDataCollectionRuleId string
 var webServerName = 'web-${application}-${environment}-${location}'
 var webNICName = 'nic-${webServerName}'
 var ipConfigName = 'ipconfig0-${webNICName}'
@@ -55,6 +56,9 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
 resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: webServerName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B2s'
@@ -115,6 +119,14 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       autoUpgradeMinorVersion: true
       typeHandlerVersion: '1.15'
     }
+  }
+}
+
+resource dataCollectionRuleAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2021-04-01' = {
+  name: 'dcrassociation'
+  scope: webServer
+  properties: {
+    dataCollectionRuleId: vmDataCollectionRuleId
   }
 }
 

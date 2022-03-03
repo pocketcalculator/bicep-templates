@@ -3,6 +3,7 @@ param application string
 param environment string
 param publicSubnetId string
 param webServerIP string
+param logAnalyticsWorkspaceId string
 var agwName = 'agw-${application}-${environment}-${location}'
 var agwPublicIP = 'ip-${agwName}'
 // https://github.com/Azure/bicep/issues/1852
@@ -112,6 +113,34 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
             id: '${agwId}/backendHttpSettingsCollection/webServerHttp80'
           }
         }
+      }
+    ]
+  }
+}
+
+resource diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: applicationGateway
+  name: 'agwDiagnosticSetting'
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'ApplicationGatewayAccessLog'
+        enabled: true
+      }
+      {
+        category: 'ApplicationGatewayPerformanceLog'
+        enabled: true
+      }
+      {
+        category: 'ApplicationGatewayFirewallLog'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
       }
     ]
   }

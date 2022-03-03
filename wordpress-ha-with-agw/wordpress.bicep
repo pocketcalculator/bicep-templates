@@ -120,6 +120,7 @@ module agw './network/applicationGateway.bicep' = {
     application: application
     environment: environment
     webServerIP: webserver.outputs.webServerIP
+    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   name: 'agw'
 }

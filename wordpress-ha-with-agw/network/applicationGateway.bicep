@@ -5,6 +5,7 @@ param publicSubnetId string
 param webServerIP string
 param logAnalyticsWorkspaceId string
 var agwName = 'agw-${application}-${environment}-${location}'
+var agwDiagSetting = 'diag-${agwName}'
 var agwPublicIP = 'ip-${agwName}'
 // https://github.com/Azure/bicep/issues/1852
 var agwId = resourceId('Microsoft.Network/applicationGateways', agwName)
@@ -29,7 +30,11 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
     sku: {
       name: 'WAF_v2'
       tier: 'WAF_v2'
-      capacity: 1
+    }
+    enableHttp2: true
+    autoscaleConfiguration: {
+        minCapacity: 1
+        maxCapacity: 10
     }
     gatewayIPConfigurations: [
       {
@@ -115,12 +120,25 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2020-11-01' =
         }
       }
     ]
+    webApplicationFirewallConfiguration: {
+      enabled: true
+      fileUploadLimitInMb: 100
+      firewallMode: 'Prevention'
+      maxRequestBodySizeInKb: 128
+      requestBodyCheck: true
+      ruleSetType: 'OWASP'
+      ruleSetVersion: '3.2'
+      exclusions: [
+      ]
+      disabledRuleGroups: [
+      ]
+    }
   }
 }
 
 resource diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: applicationGateway
-  name: 'agwDiagnosticSetting'
+  name: agwDiagSetting
   properties: {
     workspaceId: logAnalyticsWorkspaceId
     logs: [

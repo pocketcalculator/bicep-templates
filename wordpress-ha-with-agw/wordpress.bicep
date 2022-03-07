@@ -95,6 +95,7 @@ module mysql 'mysql/mySQL.bicep' = {
     mySqlvCoreCapacity: mySqlvCoreCapacity
     mySqlAdminLogin: mySqlAdminLogin
     mySqlAdminPassword: kv.getSecret('mySqlAdminPassword')
+    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
   }
   name: 'mysql'
 }

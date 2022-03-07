@@ -9,7 +9,9 @@ param mySqlvCoreCapacity int
 param mySqlAdminLogin string
 @secure()
 param mySqlAdminPassword string
+param logAnalyticsWorkspaceId string
 var dbServerName = 'mysqldb-${application}-${environment}-${location}'
+var mysqlDiagSetting = 'daig-${dbServerName}'
 
 resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
   name: dbServerName
@@ -38,6 +40,44 @@ resource mySQLdb 'Microsoft.DBforMySQL/servers@2017-12-01' = {
     }
     version: '5.7'
     createMode: 'Default'
+  }
+
+  resource mySQLdbConfigurationAuditLog 'configurations@2017-12-01' = {
+    name: 'audit_log_enabled'
+    properties: {
+      value: 'ON'
+    }
+  }
+
+  resource mySQLdbConfigurationAuditLogEvents 'configurations@2017-12-01' = {
+    name: 'audit_log_events'
+    properties: {
+      value: 'CONNECTION,GENERAL'
+    }
+  }
+}
+
+resource diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: mySQLdb
+  name: mysqlDiagSetting
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'MySqlSlowLogs'
+        enabled: true
+      }
+      {
+        category: 'MySqlAuditLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 

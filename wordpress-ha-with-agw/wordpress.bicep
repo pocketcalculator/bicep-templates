@@ -145,3 +145,13 @@ module vmDataCollectionRule './monitor/vmDataCollectionRule.bicep' = {
   }
   name: 'vmDataCollectionRule'
 }
+
+module monitorDashboard './monitor/dashboard.bicep' = {
+  params: {
+    location: location
+    application: application
+    environment: environment
+    vmId: webserver.outputs.webServerId
+  }
+  name: 'monitorDashboard'
+}

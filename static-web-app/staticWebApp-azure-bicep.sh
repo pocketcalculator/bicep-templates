@@ -35,7 +35,6 @@ az deployment group create \
 	--parameters \
 		"application=$application" \
 		"environment=$environment" \
-		"application=$application" \
 		"repositoryUrl=$repositoryUrl" \
 		"repositoryBranch=$repositoryBranch" \
 		"repositoryToken=$repositoryToken" \

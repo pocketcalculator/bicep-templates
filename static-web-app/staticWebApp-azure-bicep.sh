@@ -1,19 +1,17 @@
 #!/bin/bash
 
-subscription=null
-location=eastus2
-application=
-repositoryUrl=
-repositoryBranch=
-appLocation=build
-repositoryToken=
-environment=production
-owner=pocketcalculatorshow@gmail.com
+location=<region>
+application=<application_name>
+repositoryUrl=<github_repository_url>
+repositoryBranch=<git_branch>
+appLocation=<content_directory>
+repositoryToken=<github_personal_access_token>
+environment=<environment>
+owner=<owner_email_address>
 resourceGroupName=rg-$application-$environment-$location
 skuName=Standard
 skuTier=Standard
 
-echo subscription = $subscription
 echo location = $location
 echo application = $application
 echo repositoryUrl = $repositoryUrl

@@ -9,7 +9,7 @@ param skuTier string
 param application string
 var staticWebAppName = 'staticwebapp-${application}-${environment}-${location}'
 
-resource symbolicname 'Microsoft.Web/staticSites@2021-02-01' = {
+resource symbolicname 'Microsoft.Web/staticSites@2022-03-01' = {
   name: staticWebAppName
   location: location
   sku: {

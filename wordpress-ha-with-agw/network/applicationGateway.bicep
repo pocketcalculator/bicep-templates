@@ -163,3 +163,5 @@ resource diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
     ]
   }
 }
+
+output agwId string = applicationGateway.id

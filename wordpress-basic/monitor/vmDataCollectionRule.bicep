@@ -109,7 +109,7 @@ resource vmDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2021-04-01
         }
       ]
       azureMonitorMetrics: {
-          'name': 'azureMonitorMetrics-default'
+          name: 'azureMonitorMetrics-default'
       }
     }
     dataFlows: [

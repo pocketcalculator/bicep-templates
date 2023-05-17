@@ -4,6 +4,7 @@ param environment string
 // Keyvault
 param kvResourceGroup string
 param kvName string
+param adminSourceIP string
 // Web Server
 @description('web server OS admin username')
 @secure()
@@ -20,13 +21,12 @@ param mySqlHwTier string
 @secure()
 param mySqlAdminLogin string
 // Storage
-param nfsStorageAccountName string
-param blobStorageAccountName string
-param logAnalyticsStorageAccountName string
-param nfsShareName string
+param backupBlobStorageAccountName string
+param backupBlobContainerName string
 
 module nsg './network/networkSecurityGroup.bicep' = {
   params: {
+    adminSourceIP: adminSourceIP
     location: location
     application: application
     environment: environment
@@ -47,36 +47,13 @@ module vnet './network/vnet.bicep' = {
   name: 'vnet'
 }
 
-module nfsshare './storage/nfsShare.bicep' = {
+module storage './storage/storage.bicep' = {
   params: {
     location: location
-    nfsStorageAccountName: nfsStorageAccountName
-    nfsShareName: nfsShareName
+    blobStorageAccountName: backupBlobStorageAccountName
+    blobContainerName: backupBlobContainerName
   }
-  name: 'nfsshare'
-}
-
-module blobStorage './storage/blobStorage.bicep' = {
-  params: {
-    location: location
-    blobStorageAccountName: blobStorageAccountName
-    logAnalyticsStorageAccountName: logAnalyticsStorageAccountName
-  }
-  name: 'blob'
-}
-
-module privateEndpoints './network/privateEndpoints.bicep' = {
-  params: {
-    location: location
-    application: application
-    environment: environment
-    fileShareId: nfsshare.outputs.nfsShareId
-    mySQLId: mysql.outputs.mySQLId
-    vnetId: vnet.outputs.vnetId
-    privateSubnetId: vnet.outputs.privateSubnetId
-    dbSubnetId: vnet.outputs.dbSubnetId
-  }
-  name: 'privateendpoints'
+  name: 'storage'
 }
 
 resource kv 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
@@ -103,6 +80,7 @@ module mysql 'mysql/mySQL.bicep' = {
 module webserver './compute/webVM.bicep' = {
   params: {
     privateSubnetId: vnet.outputs.privateSubnetId
+    blobStorageAccountName: backupBlobStorageAccountName
     location: location
     application: application
     environment: environment
@@ -114,25 +92,13 @@ module webserver './compute/webVM.bicep' = {
   name: 'webserver'
 }
 
-module agw './network/applicationGateway.bicep' = {
-  params: {
-    location: location
-    publicSubnetId: vnet.outputs.publicSubnetId
-    application: application
-    environment: environment
-    webServerIP: webserver.outputs.webServerIP
-    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
-  }
-  name: 'agw'
-}
-
 module logAnalytics './monitor/logAnalytics.bicep' = {
   params: {
-    location: location
     application: application
     environment: environment
+    location: location
   }
-  name: 'loganalytics'
+  name: 'logAnalytics'
 }
 
 module vmDataCollectionRule './monitor/vmDataCollectionRule.bicep' = {

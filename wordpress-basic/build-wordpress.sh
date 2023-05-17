@@ -3,25 +3,29 @@
 # general azure variables
 subscription=null
 location=eastus2
-application=application
+application=sczurek
 environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
-vnetCIDRPrefix=10.0
+# network variables
+vnetCIDRPrefix=10.10
+adminSourceIP=`wget -O - v4.ident.me 2>/dev/null`
 # key vault variables
 kvResourceGroup=rg-keyvault-prod-eastus2
 kvName=kv-keyvault-prod-eastus2
 # linuux vm variables
 adminUsername=azureuser
 # mysql server variables
-mySqlHwFamily=Gen5
-mySqlHwName=GP_Gen5_2
-mySqlvCoreCapacity=2
-mySqlHwTier=GeneralPurpose
-# Private Endpoint supported only on General Purpose, settings below for low cost db
-# mySqlHwName=B_Gen5_1
-# mySqlvCoreCapacity=1
-# mySqlHwTier=Basic
+# Private Endpoint supported only on General Purpose
+# Settings below for General Purpose
+#mySqlHwFamily=Gen5
+#mySqlHwName=GP_Gen5_2
+#mySqlvCoreCapacity=2
+#mySqlHwTier=GeneralPurpose
+# Settings below for Basic
+mySqlHwName=B_Gen5_1
+mySqlvCoreCapacity=1
+mySqlHwTier=Basic
 mySqlAdminLogin=mysqldbadmin
 # wordpress db variables
 wordpressDBName=wordpressdb
@@ -32,10 +36,8 @@ wordpressDomainName=wordpressdomain.com
 wordpressDocRoot=/var/www/$wordpressDomainName/public_html
 # storage variables
 storageSuffix="$application$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 5)"
-nfsStorageAccountName="nfs$storageSuffix"
-blobStorageAccountName="blob$storageSuffix"
-logAnalyticsStorageAccountName="log$storageSuffix"
-nfsShareName=nfsshare
+backupBlobStorageAccountName="bkup$storageSuffix"
+backupBlobContainerName="backup"
 
 echo subscription = $subscription
 echo location = $location
@@ -44,6 +46,7 @@ echo environment = $environment
 echo owner = $owner
 echo resourceGroupName = $resourceGroupName
 echo vnetCIDRPrefix = $vnetCIDRPrefix
+echo adminSourceIP = $adminSourceIP
 echo kvResourceGroup = $kvResourceGroup
 echo kvName = $kvName
 echo adminUsername = $adminUsername
@@ -58,10 +61,8 @@ echo wordpressDBPassword = $wordpressDBPassword
 echo wordpressTablePrefix = $wordpressTablePrefix
 echo wordpressDomainName = $wordpressDomainName
 echo wordpressDocRoot = $wordpressDocRoot
-echo nfsStorageAccountName = $nfsStorageAccountName
-echo blobStorageAccountName = $blobStorageAccountName
-echo logAnalyticsStorageAccountName = $logAnalyticsStorageAccountName
-echo nfsShareName = $nfsShareName
+echo backupBlobStorageAccountName = $backupBlobStorageAccountName
+echo backupBlobContainerName = $backupBlobContainerName
 
 cat << EOF > ./compute/cloudInit.txt
 #cloud-config
@@ -94,8 +95,8 @@ packages:
   - nfs-common
   - certbot
   - python3-certbot-apache
-  - python2.7
-  - python-is-python2
+  - python3
+  - python-is-python3
 
 write_files:
 
@@ -164,24 +165,31 @@ write_files:
     </VirtualHost>
 
 runcmd:
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb            
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-common_8.0.26-1ubuntu20.04_amd64.deb
-  - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb ./mysql-common_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-community-client_8.0.33-1ubuntu22.04_amd64.deb
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-community-client-core_8.0.33-1ubuntu22.04_amd64.deb            
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.33-1ubuntu22.04_amd64.deb
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-common_8.0.33-1ubuntu22.04_amd64.deb
+  - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.33-1ubuntu22.04_amd64.deb ./mysql-community-client-core_8.0.33-1ubuntu22.04_amd64.deb ./mysql-community-client-plugins_8.0.33-1ubuntu22.04_amd64.deb ./mysql-common_8.0.33-1ubuntu22.04_amd64.deb
   - mkdir -p $wordpressDocRoot
-  - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare $wordpressDocRoot -o vers=4,minorversion=1,sec=sys
   - /usr/bin/wget https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem -P /usr/local/share/ca-certificates
   - /usr/bin/openssl x509 -outform der -in /usr/local/share/ca-certificates/BaltimoreCyberTrustRoot.crt.pem -out /usr/local/share/ca-certificates/certificate.crt
   - /usr/sbin/update-ca-certificates
   - /usr/bin/wget http://wordpress.org/latest.tar.gz -P $wordpressDocRoot
   - tar xzvf $wordpressDocRoot/latest.tar.gz -C $wordpressDocRoot --strip-components=1
+  - cd /tmp; /usr/bin/curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+  - chmod +x /tmp/wp-cli.phar; mv /tmp/wp-cli.phar /usr/bin/wp
+  - cd /tmp; /usr/bin/wget https://azcopyvnext.azureedge.net/release20230420/azcopy_linux_amd64_10.18.1.tar.gz
+  - cd /tmp; tar zxvf azcopy_linux_amd64_10.18.1.tar.gz
+  - cp /tmp/azcopy_linux_amd64_10.18.1/azcopy /usr/bin; chmod 755 /usr/bin/azcopy
+  - cd /tmp; /usr/bin/curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
   - cp /tmp/phpinfo.php $wordpressDocRoot/phpinfo.php
   - cp /tmp/heartbeat.php $wordpressDocRoot/heartbeat.php
   - cp /tmp/wp-config.php $wordpressDocRoot/wp-config.php
   - cp /tmp/$wordpressDomainName.conf  /etc/apache2/sites-available/$wordpressDomainName.conf
   - chown -R www-data:www-data $wordpressDocRoot
   - a2ensite $wordpressDomainName
+  - a2enmod rewrite
+  - a2enmod headers
   - a2dissite 000-default.conf
   - systemctl reload apache2
 EOF
@@ -202,8 +210,8 @@ az deployment group create \
 		"mySqlHwTier=$mySqlHwTier" \
 		"mySqlvCoreCapacity=$mySqlvCoreCapacity" \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
-    "nfsStorageAccountName=$nfsStorageAccountName" \
-    "blobStorageAccountName=$blobStorageAccountName" \
-    "logAnalyticsStorageAccountName=$logAnalyticsStorageAccountName" \
-    "nfsShareName=$nfsShareName"
+    "backupBlobStorageAccountName=$backupBlobStorageAccountName" \
+    "backupBlobContainerName=$backupBlobContainerName" \
+    "adminSourceIP=$adminSourceIP"
+    
 echo "Deployment for ${environment} ${application} environment is complete."

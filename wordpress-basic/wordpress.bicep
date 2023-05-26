@@ -1,6 +1,7 @@
 param location string = resourceGroup().location
 param application string
 param environment string
+param vnetCIDRPrefix string
 // Keyvault
 param kvResourceGroup string
 param kvName string
@@ -36,6 +37,7 @@ module nsg './network/networkSecurityGroup.bicep' = {
 
 module vnet './network/vnet.bicep' = {
   params: {
+    vnetCIDRPrefix: vnetCIDRPrefix
     application: application
     location: location
     environment: environment

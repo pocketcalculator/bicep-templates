@@ -5,8 +5,15 @@ param bastionNSGid string
 param webNSGid string
 param appNSGid string
 param dbNSGid string
+param vnetCIDRPrefix string
 //var vnetName = '${application}-${environment}-vnet-${uniqueString(resourceGroup().id)}'
 var vnetName = 'vnet-${application}-${environment}-${location}'
+var vnetAddressPrefix = '${vnetCIDRPrefix}.0.0/16'
+var gatewaySubnetAddressPrefix = '${vnetCIDRPrefix}.1.0/27'
+var bastionSubnetAddressPrefix = '${vnetCIDRPrefix}.2.0/27'
+var publicSubnetAddressPrefix = '${vnetCIDRPrefix}.10.0/24'
+var privateSubnetAddressPrefix = '${vnetCIDRPrefix}.20.0/24'
+var dbSubnetAddressPrefix = '${vnetCIDRPrefix}.30.0/24'
 var bastionSubnetName = 'snet-bastion-${application}-${environment}-${location}'
 var publicSubnetName = 'snet-public-${application}-${environment}-${location}'
 var privateSubnetName = 'snet-private-${application}-${environment}-${location}'
@@ -18,20 +25,20 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.10.0.0/16'
+        vnetAddressPrefix
       ]
     }
     subnets: [
       {
         name: 'GatewaySubnet'
         properties: {
-          addressPrefix: '10.10.1.0/27'
+          addressPrefix: gatewaySubnetAddressPrefix
         }
       }
       {
         name: bastionSubnetName
         properties: {
-          addressPrefix: '10.10.2.0/27'
+          addressPrefix: bastionSubnetAddressPrefix
           networkSecurityGroup: {
             id: bastionNSGid
           }
@@ -40,7 +47,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
       {
         name: publicSubnetName
         properties: {
-          addressPrefix: '10.10.10.0/24'
+          addressPrefix: publicSubnetAddressPrefix
           networkSecurityGroup: {
             id: webNSGid
           }
@@ -49,7 +56,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
       {
         name: privateSubnetName
         properties: {
-          addressPrefix: '10.10.20.0/24'
+          addressPrefix: privateSubnetAddressPrefix
           networkSecurityGroup: {
             id: appNSGid
           }
@@ -59,7 +66,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
       {
         name: dbSubnetName
         properties: {
-          addressPrefix: '10.10.30.0/24'
+          addressPrefix: dbSubnetAddressPrefix
           networkSecurityGroup: {
             id: dbNSGid
           }

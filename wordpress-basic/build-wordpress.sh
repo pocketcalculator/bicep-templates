@@ -212,6 +212,7 @@ az deployment group create \
 		"mySqlAdminLogin=$mySqlAdminLogin" \
     "backupBlobStorageAccountName=$backupBlobStorageAccountName" \
     "backupBlobContainerName=$backupBlobContainerName" \
-    "adminSourceIP=$adminSourceIP"
+    "adminSourceIP=$adminSourceIP" \
+    "vnetCIDRPrefix=$vnetCIDRPrefix"
     
 echo "Deployment for ${environment} ${application} environment is complete."

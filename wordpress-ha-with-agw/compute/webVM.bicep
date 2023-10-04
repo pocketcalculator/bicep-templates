@@ -61,7 +61,7 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B2s'
+      vmSize: 'Standard_DS1'
     }
     osProfile: {
       computerName: webServerName
@@ -83,8 +83,8 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
     storageProfile: {
       imageReference: {
         publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-focal'
-        sku: '20_04-lts-gen2'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts-gen2'
         version: 'latest'
       }
       osDisk: {

@@ -1,13 +1,13 @@
 # general azure variables
 subscription=null
 location=eastus2
-application=application
+application=wordpress
 environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 dbServerName=mysqldb-$application-$environment-$location
 mysqlAdminLogin=mysqldbadmin
-mysqlAdminPassword=mysqldbpassword
+mysqlAdminPassword=w0rd!@13Pre55
 wordpressDBName=wordpressdb
 wordpressDBUser=wpdbuser
 wordpressDBPassword=wpdbpassword

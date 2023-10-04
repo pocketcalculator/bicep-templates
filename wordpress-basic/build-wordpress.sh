@@ -3,7 +3,7 @@
 # general azure variables
 subscription=null
 location=eastus2
-application=sczurek
+application=wordpress
 environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location

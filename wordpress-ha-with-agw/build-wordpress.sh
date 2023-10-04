@@ -3,14 +3,14 @@
 # general azure variables
 subscription=null
 location=eastus2
-application=application
+application=wordpress
 environment=dev
 owner=pocketcalculatorshow@gmail.com
 resourceGroupName=rg-$application-$environment-$location
 vnetCIDRPrefix=10.0
 # key vault variables
-kvResourceGroup=rg-keyvault-prod-eastus2
-kvName=kv-keyvault-prod-eastus2
+kvResourceGroup=rg-shared-dev-eastus2
+kvName=kv-paulsczurek-eastus2
 # linuux vm variables
 adminUsername=azureuser
 # mysql server variables
@@ -94,8 +94,8 @@ packages:
   - nfs-common
   - certbot
   - python3-certbot-apache
-  - python2.7
-  - python-is-python2
+  - python3
+  - python-is-python3
 
 write_files:
 
@@ -124,7 +124,7 @@ write_files:
       define( 'DB_CHARSET', 'utf8' );
       define( 'DB_COLLATE', '' );
       define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
-      define('FORCE_SSL_ADMIN', true);
+      define('FORCE_SSL_ADMIN', false);
       
       // in some setups HTTP_X_FORWARDED_PROTO might contain 
       // a comma-separated list e.g. http,https
@@ -164,24 +164,31 @@ write_files:
     </VirtualHost>
 
 runcmd:
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb            
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb
-  - cd /tmp; wget -c https://dev.mysql.com/get/mysql-common_8.0.26-1ubuntu20.04_amd64.deb
-  - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-core_8.0.26-1ubuntu20.04_amd64.deb ./mysql-community-client-plugins_8.0.26-1ubuntu20.04_amd64.deb ./mysql-common_8.0.26-1ubuntu20.04_amd64.deb
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-community-client_8.0.33-1ubuntu22.04_amd64.deb
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-community-client-core_8.0.33-1ubuntu22.04_amd64.deb            
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-community-client-plugins_8.0.33-1ubuntu22.04_amd64.deb
+  - cd /tmp; /usr/bin/wget -c https://dev.mysql.com/get/mysql-common_8.0.33-1ubuntu22.04_amd64.deb
+  - cd /tmp; sudo apt install --yes --no-install-recommends ./mysql-community-client_8.0.33-1ubuntu22.04_amd64.deb ./mysql-community-client-core_8.0.33-1ubuntu22.04_amd64.deb ./mysql-community-client-plugins_8.0.33-1ubuntu22.04_amd64.deb ./mysql-common_8.0.33-1ubuntu22.04_amd64.deb
   - mkdir -p $wordpressDocRoot
-  - mount -t nfs $nfsStorageAccountName.file.core.windows.net:/$nfsStorageAccountName/nfsshare $wordpressDocRoot -o vers=4,minorversion=1,sec=sys
   - /usr/bin/wget https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem -P /usr/local/share/ca-certificates
   - /usr/bin/openssl x509 -outform der -in /usr/local/share/ca-certificates/BaltimoreCyberTrustRoot.crt.pem -out /usr/local/share/ca-certificates/certificate.crt
   - /usr/sbin/update-ca-certificates
   - /usr/bin/wget http://wordpress.org/latest.tar.gz -P $wordpressDocRoot
   - tar xzvf $wordpressDocRoot/latest.tar.gz -C $wordpressDocRoot --strip-components=1
+  - cd /tmp; /usr/bin/curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+  - chmod +x /tmp/wp-cli.phar; mv /tmp/wp-cli.phar /usr/bin/wp
+  - cd /tmp; /usr/bin/wget https://azcopyvnext.azureedge.net/release20230420/azcopy_linux_amd64_10.18.1.tar.gz
+  - cd /tmp; tar zxvf azcopy_linux_amd64_10.18.1.tar.gz
+  - cp /tmp/azcopy_linux_amd64_10.18.1/azcopy /usr/bin; chmod 755 /usr/bin/azcopy
+  - cd /tmp; /usr/bin/curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
   - cp /tmp/phpinfo.php $wordpressDocRoot/phpinfo.php
   - cp /tmp/heartbeat.php $wordpressDocRoot/heartbeat.php
   - cp /tmp/wp-config.php $wordpressDocRoot/wp-config.php
   - cp /tmp/$wordpressDomainName.conf  /etc/apache2/sites-available/$wordpressDomainName.conf
   - chown -R www-data:www-data $wordpressDocRoot
   - a2ensite $wordpressDomainName
+  - a2enmod rewrite
+  - a2enmod headers
   - a2dissite 000-default.conf
   - systemctl reload apache2
 EOF

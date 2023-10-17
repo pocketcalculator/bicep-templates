@@ -9,7 +9,7 @@ In addition to Windows event logs, IIS logs and Linux syslog, custom text logs c
 
 ## Confirm Host and Log Details
 
-For this how-to, we will ingest a log that resides on a Windows virtual machine using the Azure Monitor Agent, which should be present and running on the server.  Custom text log ingestion is supported on Linux VMs as well.  Ensure the agent is running the latest version.  If the VM isn't running the agent, check out the sample bicep template which deploys the agent to target machine.
+For this how-to, we will ingest a log that resides on a Windows virtual machine using the Azure Monitor Agent, which should be present and running on the server.  Custom text log ingestion is supported on Linux VMs as well.  Ensure the agent is running the latest version.
 
 Next, identify the process that will be generating the text log file and location.  For testing, we are using a PowerShell script called [log-generator.ps1](./log-generator.ps1) which generates a sample log file called appoutput.log in C:\logs.
 
@@ -99,8 +99,8 @@ Using the transform option in the Data Collection Rule data source, you can acco
 ![Data Collection Rule Data Source](./img/dcr-data-source.png)
 
 
-Once this rule has been created, the data should appear via a Kusto query of the target table within 5 mintes of sending.
+Once this rule has been created, the data should appear via a Kusto query of the target table within 5 minutes of sending.
 
-The transform setting can be tuned if required.  Note the resulting data formating may change in your table if the rule is changed during ingestion.
+The transform setting can be tuned if required.  Note the resulting data formatting may change in your table if the rule is changed during ingestion.
 
 ![Custom Log](./img/custom-log.png)

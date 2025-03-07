@@ -10,17 +10,6 @@ param adminSourceIP string
 @description('web server OS admin username')
 @secure()
 param adminUsername string
-// mySQL DB Server
-//@description('db server hadware family')
-//param mySqlHwFamily string
-//@description('db server hardware name')
-//param mySqlHwName string
-//@description('db server vcore capacity')
-//param mySqlvCoreCapacity int
-//@description('db server hardware tier')
-//param mySqlHwTier string
-//@secure()
-//param mySqlAdminLogin string
 // Storage
 param backupBlobStorageAccountName string
 param backupBlobContainerName string
@@ -63,23 +52,6 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   scope: resourceGroup(kvResourceGroup)
 }
 
-
-//module mysql 'mysql/mySQL.bicep' = {
-//  params: {
-//    application: application
-//    environment: environment
-//    location: location
-//    mySqlHwFamily: mySqlHwFamily
-//    mySqlHwName: mySqlHwName
-//    mySqlHwTier: mySqlHwTier
-//    mySqlvCoreCapacity: mySqlvCoreCapacity
-//    mySqlAdminLogin: mySqlAdminLogin
-//    mySqlAdminPassword: kv.getSecret('mySqlAdminPassword')
-//    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsWorkspaceId
-//  }
-//  name: 'mysql'
-//}
-
 module webserver './compute/webVM.bicep' = {
   params: {
     privateSubnetId: vnet.outputs.privateSubnetId
@@ -114,16 +86,3 @@ module vmDataCollectionRule './monitor/vmDataCollectionRule.bicep' = {
   }
   name: 'vmDataCollectionRule'
 }
-/*
-module monitorDashboard './monitor/dashboard.bicep' = {
-  params: {
-    location: location
-    application: application
-    environment: environment
-    vmId: webserver.outputs.webServerId
-    agwId: agw.outputs.agwId
-    mySQLId: mysql.outputs.mySQLId
-  }
-  name: 'monitorDashboard'
-}
-*/

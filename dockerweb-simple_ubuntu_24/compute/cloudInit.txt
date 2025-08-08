@@ -124,7 +124,11 @@ runcmd:
   - cd /tmp; /usr/bin/wget https://azcopyvnext.azureedge.net/releases/release-10.30.0-20241018/azcopy_linux_amd64_10.30.0.tar.gz
   - cd /tmp; tar zxvf azcopy_linux_amd64_10.30.0.tar.gz
   - cp /tmp/azcopy_linux_amd64_10.30.0/azcopy /usr/bin; chmod 755 /usr/bin/azcopy
-  - cd /tmp; /usr/bin/curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  # Azure CLI installation for Ubuntu 24.04
+  - curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+  - echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
+  - apt update
+  - apt install -y azure-cli
   - cp /tmp/phpinfo.php /var/www/wordpressdomain.com/public_html/phpinfo.php
   - cp /tmp/heartbeat.php /var/www/wordpressdomain.com/public_html/heartbeat.php
   - cp /tmp/wp-config.php /var/www/wordpressdomain.com/public_html/wp-config.php

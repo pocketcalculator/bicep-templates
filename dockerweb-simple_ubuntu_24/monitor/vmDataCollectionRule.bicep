@@ -5,7 +5,7 @@ param logAnalyticsWorkspaceName string
 param logAnalyticsWorkspaceId string
 var vmDataCollectionRuleName = 'dcr-${application}-${environment}-${location}'
 
-resource vmDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2021-04-01' = {
+resource vmDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
   location: location
   name: vmDataCollectionRuleName
   kind: 'Linux'

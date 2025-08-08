@@ -17,7 +17,11 @@ var osDiskName = 'disk-os-${webServerName}'
 var dnsLabelPrefix = toLower('${webServerName}')
 var osDiskType = 'Standard_LRS'
 //globally unique identifier for Storage Blob Contributor Role
+// Note: Consider using more specific roles like "Storage Blob Data Contributor" (ba92f5b4-2d11-453d-a403-e96b0029c9fe)
+// or "Storage Blob Data Reader" (2a2b9908-6ea1-4ae2-8e65-a410df84e7d1) based on actual requirements
 var blobContributorRoleDefinitionName = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+//globally unique identifier for Reader Role (needed for az storage account list)
+var readerRoleDefinitionName = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
   name: webNICName
@@ -112,7 +116,7 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       }
     }
   }
-  resource AzureMonitorLinuxAgent 'Extensions@2021-07-01' = {
+  resource AzureMonitorLinuxAgent 'extensions@2023-07-01' = {
     name: 'AzureMonitorLinuxAgent'
     location: location
     properties: {
@@ -120,10 +124,10 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       type: 'AzureMonitorLinuxAgent'
       enableAutomaticUpgrade: true
       autoUpgradeMinorVersion: true
-      typeHandlerVersion: '1.26'
+      typeHandlerVersion: '1.28'
     }
   }
-  resource NetworkWatcherAgentLinux 'Extensions@2021-07-01' = {
+  resource NetworkWatcherAgentLinux 'extensions@2023-07-01' = {
     name: 'NetworkWatcherAgentLinux'
     location: location
     properties: {
@@ -144,6 +148,10 @@ resource blobContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@
   name: blobContributorRoleDefinitionName
 }
 
+resource readerRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: readerRoleDefinitionName
+}
+
 resource blobContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: blobStorageAccount
   name: guid(blobStorageAccountName, webServerName, blobContributorRoleDefinitionName)
@@ -153,7 +161,16 @@ resource blobContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@
   }
 }
 
-resource dataCollectionRuleAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2021-04-01' = {
+resource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, webServerName, readerRoleDefinitionName)
+  properties: {
+    roleDefinitionId: readerRoleDefinition.id
+    principalId: webServer.identity.principalId
+  }
+}
+
+resource dataCollectionRuleAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = {
   name: 'dcrassociation'
   scope: webServer
   properties: {

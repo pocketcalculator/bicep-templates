@@ -1,0 +1,1148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.37.4.10188",
+      "templateHash": "7159023134576676407"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "application": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string"
+    },
+    "vnetCIDRPrefix": {
+      "type": "string"
+    },
+    "kvResourceGroup": {
+      "type": "string"
+    },
+    "kvName": {
+      "type": "string"
+    },
+    "adminSourceIP": {
+      "type": "string"
+    },
+    "adminUsername": {
+      "type": "securestring",
+      "metadata": {
+        "description": "web server OS admin username"
+      }
+    },
+    "backupBlobStorageAccountName": {
+      "type": "string"
+    },
+    "backupBlobContainerName": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "$fxv#0": "#cloud-config\npackage_upgrade: true\npackages:\n  - binutils\n  - curl\n  - mysql-server\n  - sysstat\n  - collectd\n  - collectd-utils\n  - ghostscript\n  - apache2\n  - openssl\n  - php\n  - libapache2-mod-php\n  - php-bcmath\n  - php-curl\n  - php-imagick\n  - php-json\n  - php-gd\n  - php-intl\n  - php-mbstring\n  - php-soap\n  - php-xml\n  - php-xmlrpc\n  - php-zip\n  - php-fpm\n  - php-mysql\n  - nfs-common\n  - certbot\n  - python3-certbot-apache\n  - python3\n  - python-is-python3\n  - apt-transport-https\n  - ca-certificates\n  - gnupg\n  - lsb-release\n\nwrite_files:\n\n- path: /tmp/phpinfo.php\n  content: |\n    <?php phpinfo(); ?>\n\n- path: /tmp/heartbeat.php\n  content: |\n    <html>\n        <body>\n            <p>\n                site is running.\n            </p>\n            <?php echo gethostname(); ?>\n        </body>\n    </html>\n\n- path: /tmp/wp-config.php\n  content: |\n      <?php\n      define('DB_NAME', 'wordpressdb');\n      define('DB_USER', 'wpdbuser');\n      define('DB_PASSWORD', 'wpdbpassword');\n      define('DB_HOST', 'localhost');\n      define( 'DB_CHARSET', 'utf8' );\n      define( 'DB_COLLATE', '' );\n      define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);\n      define('FORCE_SSL_ADMIN', true);\n      \n      // in some setups HTTP_X_FORWARDED_PROTO might contain \n      // a comma-separated list e.g. http,https\n      // so check for https existence\n      // if ( strpos(['HTTP_X_FORWARDED_PROTO'], 'https' ) !== false) \n      //   ['HTTPS']='on';\n      $table_prefix = 'wp_';\n\n      if ( ! defined( 'ABSPATH' ) ) {\n        define( 'ABSPATH', __DIR__ . '/' );\n      }\n\n      require_once ABSPATH . 'wp-settings.php';\n       ?>\n\n- path: /tmp/wordpressdomain.com.conf\n  content: |\n    <VirtualHost *:80>\n\n      ServerAdmin webmaster@wordpressdomain.com\n      ServerName wordpressdomain.com\n      ServerAlias www.wordpressdomain.com\n      DocumentRoot /var/www/wordpressdomain.com/public_html\n      LogLevel warn\n      ErrorLog /var/log/apache2/wordpressdomain.com-error.log\n      CustomLog /var/log/apache2/wordpressdomain.com-access.log combined\n      <Directory /var/www/wordpressdomain.com/public_html>\n        Options FollowSymLinks\n        AllowOverride Limit Options FileInfo\n        DirectoryIndex index.php index.html\n        Require all granted\n      </Directory>\n      <Directory /var/www/wordpressdomain.com/public_html/wp-content>\n        Options FollowSymLinks\n        Require all granted\n      </Directory>\n    </VirtualHost>\n\nruncmd:\n  # Docker installation steps\n  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg\n  - echo \"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | tee /etc/apt/sources.list.d/docker.list > /dev/null\n  - apt update\n  - apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin\n  - curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose\n  - chmod +x /usr/local/bin/docker-compose\n  - systemctl start docker\n  - systemctl enable docker\n  - usermod -aG docker azureuser\n  # WordPress and application setup\n  - mkdir -p /var/www/wordpressdomain.com/public_html\n  - /usr/bin/wget https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem -P /usr/local/share/ca-certificates\n  - /usr/bin/openssl x509 -outform der -in /usr/local/share/ca-certificates/BaltimoreCyberTrustRoot.crt.pem -out /usr/local/share/ca-certificates/certificate.crt\n  - /usr/sbin/update-ca-certificates\n  - /usr/bin/wget http://wordpress.org/latest.tar.gz -P /var/www/wordpressdomain.com/public_html\n  - tar xzvf /var/www/wordpressdomain.com/public_html/latest.tar.gz -C /var/www/wordpressdomain.com/public_html --strip-components=1\n  - cd /tmp; /usr/bin/curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar\n  - chmod +x /tmp/wp-cli.phar; mv /tmp/wp-cli.phar /usr/bin/wp\n  - cd /tmp; /usr/bin/wget https://azcopyvnext.azureedge.net/releases/release-10.30.0-20241018/azcopy_linux_amd64_10.30.0.tar.gz\n  - cd /tmp; tar zxvf azcopy_linux_amd64_10.30.0.tar.gz\n  - cp /tmp/azcopy_linux_amd64_10.30.0/azcopy /usr/bin; chmod 755 /usr/bin/azcopy\n  # Azure CLI installation for Ubuntu 24.04\n  - curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null\n  - echo \"deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main\" | tee /etc/apt/sources.list.d/azure-cli.list\n  - apt update\n  - apt install -y azure-cli\n  - cp /tmp/phpinfo.php /var/www/wordpressdomain.com/public_html/phpinfo.php\n  - cp /tmp/heartbeat.php /var/www/wordpressdomain.com/public_html/heartbeat.php\n  - cp /tmp/wp-config.php /var/www/wordpressdomain.com/public_html/wp-config.php\n  - cp /tmp/wordpressdomain.com.conf  /etc/apache2/sites-available/wordpressdomain.com.conf\n  - chown -R www-data:www-data /var/www/wordpressdomain.com/public_html\n  - a2ensite wordpressdomain.com\n  - a2enmod rewrite\n  - a2enmod headers\n  - a2dissite 000-default.conf\n  - systemctl reload apache2\n"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "nsg",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "adminSourceIP": {
+            "value": "[parameters('adminSourceIP')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "application": {
+            "value": "[parameters('application')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "5482104596620156383"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "application": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "adminSourceIP": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "bastionNSGName": "[format('nsg-bastion-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "webNSGName": "[format('nsg-web-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "appNSGName": "[format('nsg-app-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "dbNSGName": "[format('nsg-db-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-11-01",
+              "name": "[variables('bastionNSGName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "sshRule",
+                    "properties": {
+                      "description": "allow all inbound on port 22 (SSH)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "rdpRule",
+                    "properties": {
+                      "description": "allow all inbound on port 3389 (RDP)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "3389",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-11-01",
+              "name": "[variables('webNSGName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "http80Rule",
+                    "properties": {
+                      "description": "allow all inbound on port 80 (HTTP)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "80",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "http443Rule",
+                    "properties": {
+                      "description": "allow all inbound on port 443 (HTTPS)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "443",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-11-01",
+              "name": "[variables('appNSGName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "http80Rule",
+                    "properties": {
+                      "description": "allow all inbound on port 80 (HTTP)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "80",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "http443Rule",
+                    "properties": {
+                      "description": "allow all inbound on port 443 (HTTPS)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "443",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "http8080Rule",
+                    "properties": {
+                      "description": "allow all inbound on port 8080 (HTTPS)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "8080",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 120,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "ssh22Rule",
+                    "properties": {
+                      "description": "allow access for admin on current IP, port 22 (SSH)",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "[parameters('adminSourceIP')]",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 130,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-11-01",
+              "name": "[variables('dbNSGName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "mySQLRule",
+                    "properties": {
+                      "description": "description",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "3306",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "bastionNSGid": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('bastionNSGName'))]"
+            },
+            "webNSGid": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('webNSGName'))]"
+            },
+            "appNSGid": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('appNSGName'))]"
+            },
+            "dbNSGid": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('dbNSGName'))]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "vnet",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetCIDRPrefix": {
+            "value": "[parameters('vnetCIDRPrefix')]"
+          },
+          "application": {
+            "value": "[parameters('application')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "bastionNSGid": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'nsg'), '2022-09-01').outputs.bastionNSGid.value]"
+          },
+          "webNSGid": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'nsg'), '2022-09-01').outputs.webNSGid.value]"
+          },
+          "appNSGid": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'nsg'), '2022-09-01').outputs.appNSGid.value]"
+          },
+          "dbNSGid": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'nsg'), '2022-09-01').outputs.dbNSGid.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "17843959904552749419"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "application": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "bastionNSGid": {
+              "type": "string"
+            },
+            "webNSGid": {
+              "type": "string"
+            },
+            "appNSGid": {
+              "type": "string"
+            },
+            "dbNSGid": {
+              "type": "string"
+            },
+            "vnetCIDRPrefix": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "vnetName": "[format('vnet-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "vnetAddressPrefix": "[format('{0}.0.0/16', parameters('vnetCIDRPrefix'))]",
+            "gatewaySubnetAddressPrefix": "[format('{0}.1.0/27', parameters('vnetCIDRPrefix'))]",
+            "bastionSubnetAddressPrefix": "[format('{0}.2.0/27', parameters('vnetCIDRPrefix'))]",
+            "publicSubnetAddressPrefix": "[format('{0}.10.0/24', parameters('vnetCIDRPrefix'))]",
+            "privateSubnetAddressPrefix": "[format('{0}.20.0/24', parameters('vnetCIDRPrefix'))]",
+            "dbSubnetAddressPrefix": "[format('{0}.30.0/24', parameters('vnetCIDRPrefix'))]",
+            "bastionSubnetName": "[format('snet-bastion-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "publicSubnetName": "[format('snet-public-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "privateSubnetName": "[format('snet-private-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "dbSubnetName": "[format('snet-db-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2019-11-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[variables('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "GatewaySubnet",
+                    "properties": {
+                      "addressPrefix": "[variables('gatewaySubnetAddressPrefix')]"
+                    }
+                  },
+                  {
+                    "name": "[variables('bastionSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[variables('bastionSubnetAddressPrefix')]",
+                      "networkSecurityGroup": {
+                        "id": "[parameters('bastionNSGid')]"
+                      }
+                    }
+                  },
+                  {
+                    "name": "[variables('publicSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[variables('publicSubnetAddressPrefix')]",
+                      "networkSecurityGroup": {
+                        "id": "[parameters('webNSGid')]"
+                      }
+                    }
+                  },
+                  {
+                    "name": "[variables('privateSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[variables('privateSubnetAddressPrefix')]",
+                      "networkSecurityGroup": {
+                        "id": "[parameters('appNSGid')]"
+                      },
+                      "privateEndpointNetworkPolicies": "Disabled"
+                    }
+                  },
+                  {
+                    "name": "[variables('dbSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[variables('dbSubnetAddressPrefix')]",
+                      "networkSecurityGroup": {
+                        "id": "[parameters('dbNSGid')]"
+                      },
+                      "privateEndpointNetworkPolicies": "Disabled"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "gatewaySubnetId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '2019-11-01').subnets[0].id]"
+            },
+            "bastionSubnetId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '2019-11-01').subnets[1].id]"
+            },
+            "publicSubnetId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '2019-11-01').subnets[2].id]"
+            },
+            "privateSubnetId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '2019-11-01').subnets[3].id]"
+            },
+            "dbSubnetId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '2019-11-01').subnets[4].id]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'nsg')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "storage",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "blobStorageAccountName": {
+            "value": "[parameters('backupBlobStorageAccountName')]"
+          },
+          "blobContainerName": {
+            "value": "[parameters('backupBlobContainerName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "13242009409581781394"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "blobStorageAccountName": {
+              "type": "string"
+            },
+            "blobContainerName": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "storageAccountSku": "Standard_LRS"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}/{2}', parameters('blobStorageAccountName'), 'default', parameters('blobContainerName'))]",
+              "properties": {
+                "metadata": {
+                  "publicAccess": "Blob"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('blobStorageAccountName'), 'default')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', parameters('blobStorageAccountName'), 'default')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('blobStorageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-06-01",
+              "name": "[parameters('blobStorageAccountName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "[variables('storageAccountSku')]"
+              },
+              "kind": "StorageV2",
+              "properties": {
+                "accessTier": "Cool",
+                "allowBlobPublicAccess": true,
+                "allowCrossTenantReplication": true,
+                "allowSharedKeyAccess": true,
+                "defaultToOAuthAuthentication": false,
+                "encryption": {
+                  "keySource": "Microsoft.Storage",
+                  "requireInfrastructureEncryption": false,
+                  "services": {
+                    "blob": {
+                      "enabled": true,
+                      "keyType": "Account"
+                    },
+                    "file": null,
+                    "queue": null,
+                    "table": null
+                  }
+                },
+                "isHnsEnabled": false,
+                "isNfsV3Enabled": false,
+                "largeFileSharesState": null,
+                "minimumTlsVersion": "TLS1_2",
+                "publicNetworkAccess": "Enabled",
+                "supportsHttpsTrafficOnly": false
+              }
+            }
+          ],
+          "outputs": {
+            "blobStorageId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('blobStorageAccountName'))]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "webserver",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "privateSubnetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'vnet'), '2022-09-01').outputs.privateSubnetId.value]"
+          },
+          "blobStorageAccountName": {
+            "value": "[parameters('backupBlobStorageAccountName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "application": {
+            "value": "[parameters('application')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('kvResourceGroup')), 'Microsoft.KeyVault/vaults', parameters('kvName'))]"
+              },
+              "secretName": "adminPassword"
+            }
+          },
+          "customData": {
+            "value": "[base64(variables('$fxv#0'))]"
+          },
+          "vmDataCollectionRuleId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'vmDataCollectionRule'), '2022-09-01').outputs.vmDataCollectionRuleId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "8226901039221782212"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "application": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "adminUsername": {
+              "type": "securestring"
+            },
+            "adminPassword": {
+              "type": "securestring"
+            },
+            "customData": {
+              "type": "string"
+            },
+            "privateSubnetId": {
+              "type": "string"
+            },
+            "vmDataCollectionRuleId": {
+              "type": "string"
+            },
+            "blobStorageAccountName": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "webServerName": "[format('web-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]",
+            "webNICName": "[format('nic-{0}', variables('webServerName'))]",
+            "ipConfigName": "[format('ipconfig0-{0}', variables('webNICName'))]",
+            "publicIPAddressName": "[format('ip-{0}', variables('webServerName'))]",
+            "osDiskName": "[format('disk-os-{0}', variables('webServerName'))]",
+            "dnsLabelPrefix": "[toLower(format('{0}', variables('webServerName')))]",
+            "osDiskType": "Standard_LRS",
+            "blobContributorRoleDefinitionName": "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', variables('webServerName'), 'AzureMonitorLinuxAgent')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Azure.Monitor",
+                "type": "AzureMonitorLinuxAgent",
+                "enableAutomaticUpgrade": true,
+                "autoUpgradeMinorVersion": true,
+                "typeHandlerVersion": "1.28"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('webServerName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', variables('webServerName'), 'NetworkWatcherAgentLinux')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Azure.NetworkWatcher",
+                "type": "NetworkWatcherAgentLinux",
+                "enableAutomaticUpgrade": true,
+                "autoUpgradeMinorVersion": true,
+                "typeHandlerVersion": "1.4"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('webServerName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-11-01",
+              "name": "[variables('webNICName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "[variables('ipConfigName')]",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[parameters('privateSubnetId')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-06-01",
+              "name": "[variables('publicIPAddressName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Basic"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "publicIPAddressVersion": "IPv4",
+                "dnsSettings": {
+                  "domainNameLabel": "[variables('dnsLabelPrefix')]"
+                },
+                "idleTimeoutInMinutes": 4
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2020-12-01",
+              "name": "[variables('webServerName')]",
+              "location": "[parameters('location')]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "Standard_B2s"
+                },
+                "osProfile": {
+                  "computerName": "[variables('webServerName')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPassword')]",
+                  "linuxConfiguration": {
+                    "disablePasswordAuthentication": true,
+                    "ssh": {
+                      "publicKeys": [
+                        {
+                          "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+                          "keyData": "[parameters('adminPassword')]"
+                        }
+                      ]
+                    }
+                  },
+                  "customData": "[parameters('customData')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "ubuntu-24_04-lts",
+                    "sku": "server",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "name": "[variables('osDiskName')]",
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage",
+                    "managedDisk": {
+                      "storageAccountType": "[variables('osDiskType')]"
+                    }
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('webNICName'))]"
+                    }
+                  ]
+                },
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": true
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('webNICName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('blobStorageAccountName'))]",
+              "name": "[guid(parameters('blobStorageAccountName'), variables('webServerName'), variables('blobContributorRoleDefinitionName'))]",
+              "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('blobContributorRoleDefinitionName'))]",
+                "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('webServerName')), '2020-12-01', 'full').identity.principalId]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('webServerName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Insights/dataCollectionRuleAssociations",
+              "apiVersion": "2022-06-01",
+              "scope": "[format('Microsoft.Compute/virtualMachines/{0}', variables('webServerName'))]",
+              "name": "dcrassociation",
+              "properties": {
+                "dataCollectionRuleId": "[parameters('vmDataCollectionRuleId')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('webServerName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "webServerId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/virtualMachines', variables('webServerName'))]"
+            },
+            "webServerIP": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/networkInterfaces', variables('webNICName')), '2020-11-01').ipConfigurations[0].properties.privateIPAddress]"
+            },
+            "webserverIdentity": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('webServerName')), '2020-12-01', 'full').identity.principalId]"
+            },
+            "webServerPublicIPResourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+            },
+            "webServerFQDN": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')), '2020-06-01').dnsSettings.fqdn]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'vmDataCollectionRule')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vnet')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "logAnalytics",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "application": {
+            "value": "[parameters('application')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "17919728815587193341"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "application": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "logAnalyticsWorkspaceName": "[format('log-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2020-10-01",
+              "name": "[variables('logAnalyticsWorkspaceName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "value": "[variables('logAnalyticsWorkspaceName')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "vmDataCollectionRule",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "application": {
+            "value": "[parameters('application')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "logAnalyticsWorkspaceName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'logAnalytics'), '2022-09-01').outputs.logAnalyticsWorkspaceName.value]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'logAnalytics'), '2022-09-01').outputs.logAnalyticsWorkspaceId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.37.4.10188",
+              "templateHash": "5329399352598848872"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "application": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "logAnalyticsWorkspaceName": {
+              "type": "string"
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "vmDataCollectionRuleName": "[format('dcr-{0}-{1}-{2}', parameters('application'), parameters('environment'), parameters('location'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Insights/dataCollectionRules",
+              "apiVersion": "2022-06-01",
+              "name": "[variables('vmDataCollectionRuleName')]",
+              "location": "[parameters('location')]",
+              "kind": "Linux",
+              "properties": {
+                "dataSources": {
+                  "performanceCounters": [
+                    {
+                      "counterSpecifiers": [
+                        "Processor(*)\\% Processor Time",
+                        "Processor(*)\\% Idle Time",
+                        "Processor(*)\\% User Time",
+                        "Processor(*)\\% Nice Time",
+                        "Processor(*)\\% Privileged Time",
+                        "Processor(*)\\% IO Wait Time",
+                        "Processor(*)\\% Interrupt Time",
+                        "Processor(*)\\% DPC Time",
+                        "Memory(*)\\Available MBytes Memory",
+                        "Memory(*)\\% Available Memory",
+                        "Memory(*)\\Used Memory MBytes",
+                        "Memory(*)\\% Used Memory",
+                        "Memory(*)\\Pages/sec",
+                        "Memory(*)\\Page Reads/sec",
+                        "Memory(*)\\Page Writes/sec",
+                        "Memory(*)\\Available MBytes Swap",
+                        "Memory(*)\\% Available Swap Space",
+                        "Memory(*)\\Used MBytes Swap Space",
+                        "Memory(*)\\% Used Swap Space",
+                        "Logical Disk(*)\\% Free Inodes",
+                        "Logical Disk(*)\\% Used Inodes",
+                        "Logical Disk(*)\\Free Megabytes",
+                        "Logical Disk(*)\\% Free Space",
+                        "Logical Disk(*)\\% Used Space",
+                        "Logical Disk(*)\\Logical Disk Bytes/sec",
+                        "Logical Disk(*)\\Disk Read Bytes/sec",
+                        "Logical Disk(*)\\Disk Write Bytes/sec",
+                        "Logical Disk(*)\\Disk Transfers/sec",
+                        "Logical Disk(*)\\Disk Reads/sec",
+                        "Logical Disk(*)\\Disk Writes/sec",
+                        "Network(*)\\Total Bytes Transmitted",
+                        "Network(*)\\Total Bytes Received",
+                        "Network(*)\\Total Bytes",
+                        "Network(*)\\Total Packets Transmitted",
+                        "Network(*)\\Total Packets Received",
+                        "Network(*)\\Total Rx Errors",
+                        "Network(*)\\Total Tx Errors",
+                        "Network(*)\\Total Collisions"
+                      ],
+                      "samplingFrequencyInSeconds": 60,
+                      "streams": [
+                        "Microsoft-InsightsMetrics"
+                      ],
+                      "name": "perfCounterDataSource"
+                    }
+                  ],
+                  "syslog": [
+                    {
+                      "streams": [
+                        "Microsoft-Syslog"
+                      ],
+                      "facilityNames": [
+                        "auth",
+                        "authpriv",
+                        "cron",
+                        "daemon",
+                        "mark",
+                        "kern",
+                        "local0",
+                        "local1",
+                        "local2",
+                        "local3",
+                        "local4",
+                        "local5",
+                        "local6",
+                        "local7",
+                        "lpr",
+                        "mail",
+                        "news",
+                        "syslog",
+                        "user",
+                        "uucp"
+                      ],
+                      "logLevels": [
+                        "Debug",
+                        "Info",
+                        "Notice",
+                        "Warning",
+                        "Error",
+                        "Critical",
+                        "Alert",
+                        "Emergency"
+                      ],
+                      "name": "sysLogsDataSource"
+                    }
+                  ]
+                },
+                "destinations": {
+                  "logAnalytics": [
+                    {
+                      "name": "[parameters('logAnalyticsWorkspaceName')]",
+                      "workspaceResourceId": "[parameters('logAnalyticsWorkspaceId')]"
+                    }
+                  ],
+                  "azureMonitorMetrics": {
+                    "name": "azureMonitorMetrics-default"
+                  }
+                },
+                "dataFlows": [
+                  {
+                    "streams": [
+                      "Microsoft-InsightsMetrics"
+                    ],
+                    "destinations": [
+                      "azureMonitorMetrics-default"
+                    ]
+                  },
+                  {
+                    "streams": [
+                      "Microsoft-Syslog"
+                    ],
+                    "destinations": [
+                      "[parameters('logAnalyticsWorkspaceName')]"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "vmDataCollectionRuleId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Insights/dataCollectionRules', variables('vmDataCollectionRuleName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'logAnalytics')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "webServerPublicIPResourceId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webserver'), '2022-09-01').outputs.webServerPublicIPResourceId.value]"
+    },
+    "webServerFQDN": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webserver'), '2022-09-01').outputs.webServerFQDN.value]"
+    }
+  }
+}

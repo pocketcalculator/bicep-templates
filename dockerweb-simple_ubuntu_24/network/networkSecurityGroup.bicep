@@ -3,11 +3,11 @@ param application string
 param environment string
 param adminSourceIP string
 var bastionNSGName = 'nsg-bastion-${application}-${environment}-${location}'
-var webNSGName = 'nsg-web-${application}-${environment}-${location}'
-var appNSGName = 'nsg-app-${application}-${environment}-${location}'
-var dbNSGName = 'nsg-db-${application}-${environment}-${location}'
+var frontendNSGName = 'nsg-frontend-${application}-${environment}-${location}'
+var applicationNSGName = 'nsg-application-${application}-${environment}-${location}'
+var databaseNSGName = 'nsg-database-${application}-${environment}-${location}'
 
-resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-11-01' = {
+resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
   name: bastionNSGName
   location: location
   properties: {
@@ -15,11 +15,11 @@ resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@20
       {
         name: 'sshRule'
         properties: {
-          description: 'allow all inbound on port 22 (SSH)'
+          description: 'allow SSH from admin IP only'
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '22'
-          sourceAddressPrefix: '*'
+          sourceAddressPrefix: adminSourceIP
           destinationAddressPrefix: '*'
           access: 'Allow'
           priority: 100
@@ -29,11 +29,11 @@ resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@20
       {
         name: 'rdpRule'
         properties: {
-          description: 'allow all inbound on port 3389 (RDP)'
+          description: 'allow RDP from admin IP only'
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '3389'
-          sourceAddressPrefix: '*'
+          sourceAddressPrefix: adminSourceIP
           destinationAddressPrefix: '*'
           access: 'Allow'
           priority: 110
@@ -44,8 +44,8 @@ resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@20
   }
 }
 
-resource webNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-11-01' = {
-  name: webNSGName
+resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
+  name: frontendNSGName
   location: location
   properties: {
     securityRules: [
@@ -81,8 +81,8 @@ resource webNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-1
   }
 }
 
-resource appNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-11-01' = {
-  name: appNSGName
+resource applicationNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
+  name: applicationNSGName
   location: location
   properties: {
     securityRules: [
@@ -146,8 +146,8 @@ resource appNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-1
   }
 }
 
-resource dbNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-11-01' = {
-  name: dbNSGName
+resource databaseNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
+  name: databaseNSGName
   location: location
   properties: {
     securityRules: [
@@ -170,6 +170,6 @@ resource dbNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-11
 }
 
 output bastionNSGid string = bastionNetworkSecurityGroup.id
-output webNSGid string = webNetworkSecurityGroup.id
-output appNSGid string = appNetworkSecurityGroup.id
-output dbNSGid string = dbNetworkSecurityGroup.id
+output frontendNSGid string = frontendNetworkSecurityGroup.id
+output applicationNSGid string = applicationNetworkSecurityGroup.id
+output databaseNSGid string = databaseNetworkSecurityGroup.id

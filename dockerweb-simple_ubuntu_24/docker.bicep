@@ -14,6 +14,13 @@ param adminUsername string
 param backupBlobStorageAccountName string
 param backupBlobContainerName string
 
+// Common tags
+var commonTags = {
+  Application: application
+  Environment: environment
+  CreatedBy: 'Bicep'
+}
+
 module nsg './network/networkSecurityGroup.bicep' = {
   params: {
     adminSourceIP: adminSourceIP
@@ -31,9 +38,9 @@ module vnet './network/vnet.bicep' = {
     location: location
     environment: environment
     bastionNSGid: nsg.outputs.bastionNSGid
-    webNSGid: nsg.outputs.webNSGid
-    appNSGid: nsg.outputs.appNSGid
-    dbNSGid: nsg.outputs.dbNSGid
+    frontendNSGid: nsg.outputs.frontendNSGid
+    applicationNSGid: nsg.outputs.applicationNSGid
+    databaseNSGid: nsg.outputs.databaseNSGid
   }
   name: 'vnet'
 }
@@ -54,7 +61,7 @@ resource kv 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
 
 module webserver './compute/vm.bicep' = {
   params: {
-    privateSubnetId: vnet.outputs.privateSubnetId
+    applicationSubnetId: vnet.outputs.applicationSubnetId
     blobStorageAccountName: backupBlobStorageAccountName
     location: location
     application: application

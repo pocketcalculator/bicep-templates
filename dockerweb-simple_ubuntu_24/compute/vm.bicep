@@ -6,7 +6,7 @@ param adminUsername string
 @secure()
 param adminPassword string
 param customData string
-param privateSubnetId string
+param applicationSubnetId string
 param vmDataCollectionRuleId string
 param blobStorageAccountName string
 var webServerName = 'web-${application}-${environment}-${location}'
@@ -33,7 +33,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: privateSubnetId
+            id: applicationSubnetId
           }
           publicIPAddress: {
             id: publicIP.id
@@ -124,7 +124,7 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       type: 'AzureMonitorLinuxAgent'
       enableAutomaticUpgrade: true
       autoUpgradeMinorVersion: true
-      typeHandlerVersion: '1.28'
+      typeHandlerVersion: '1.36'
     }
   }
   resource NetworkWatcherAgentLinux 'extensions@2023-07-01' = {

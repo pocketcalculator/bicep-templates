@@ -2,9 +2,9 @@ param location string
 param application string
 param environment string
 param bastionNSGid string
-param webNSGid string
-param appNSGid string
-param dbNSGid string
+param frontendNSGid string
+param applicationNSGid string
+param databaseNSGid string
 param vnetCIDRPrefix string
 //var vnetName = '${application}-${environment}-vnet-${uniqueString(resourceGroup().id)}'
 var vnetName = 'vnet-${application}-${environment}-${location}'
@@ -15,9 +15,9 @@ var publicSubnetAddressPrefix = '${vnetCIDRPrefix}.10.0/24'
 var privateSubnetAddressPrefix = '${vnetCIDRPrefix}.20.0/24'
 var dbSubnetAddressPrefix = '${vnetCIDRPrefix}.30.0/24'
 var bastionSubnetName = 'snet-bastion-${application}-${environment}-${location}'
-var publicSubnetName = 'snet-public-${application}-${environment}-${location}'
-var privateSubnetName = 'snet-private-${application}-${environment}-${location}'
-var dbSubnetName = 'snet-db-${application}-${environment}-${location}'
+var frontendSubnetName = 'snet-frontend-${application}-${environment}-${location}'
+var applicationSubnetName = 'snet-application-${application}-${environment}-${location}'
+var databaseSubnetName = 'snet-database-${application}-${environment}-${location}'
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   name: vnetName
@@ -45,30 +45,30 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
         }
       }
       {
-        name: publicSubnetName
+        name: frontendSubnetName
         properties: {
           addressPrefix: publicSubnetAddressPrefix
           networkSecurityGroup: {
-            id: webNSGid
+            id: frontendNSGid
           }
         }
       }
       {
-        name: privateSubnetName
+        name: applicationSubnetName
         properties: {
           addressPrefix: privateSubnetAddressPrefix
           networkSecurityGroup: {
-            id: appNSGid
+            id: applicationNSGid
           }
           privateEndpointNetworkPolicies: 'Disabled'
         }
       }
       {
-        name: dbSubnetName
+        name: databaseSubnetName
         properties: {
           addressPrefix: dbSubnetAddressPrefix
           networkSecurityGroup: {
-            id: dbNSGid
+            id: databaseNSGid
           }
           privateEndpointNetworkPolicies: 'Disabled'
         }
@@ -80,6 +80,6 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
 output vnetId string = virtualNetwork.id
 output gatewaySubnetId string = virtualNetwork.properties.subnets[0].id
 output bastionSubnetId string = virtualNetwork.properties.subnets[1].id
-output publicSubnetId string = virtualNetwork.properties.subnets[2].id
-output privateSubnetId string = virtualNetwork.properties.subnets[3].id
-output dbSubnetId string = virtualNetwork.properties.subnets[4].id
+output frontendSubnetId string = virtualNetwork.properties.subnets[2].id
+output applicationSubnetId string = virtualNetwork.properties.subnets[3].id
+output databaseSubnetId string = virtualNetwork.properties.subnets[4].id

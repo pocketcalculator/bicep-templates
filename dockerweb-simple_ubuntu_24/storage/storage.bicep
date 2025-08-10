@@ -12,29 +12,31 @@ resource blobStorage 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   kind: 'StorageV2'
   properties: {
     accessTier: 'Cool'
-    allowBlobPublicAccess: true
-    allowCrossTenantReplication: true
-    allowSharedKeyAccess: true
-    defaultToOAuthAuthentication: false
+    allowBlobPublicAccess: false
+    allowCrossTenantReplication: false
+    allowSharedKeyAccess: false
+    defaultToOAuthAuthentication: true
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false
+      requireInfrastructureEncryption: true
       services: {
         blob: {
           enabled: true
           keyType: 'Account'
         }
-        file: null
-        queue: null
-        table: null
+        file: {
+          enabled: true
+          keyType: 'Account'
+        }
       }
     }
-    isHnsEnabled: false
-    isNfsV3Enabled: false
-    largeFileSharesState: null
     minimumTlsVersion: 'TLS1_2'
-    publicNetworkAccess: 'Enabled'
-    supportsHttpsTrafficOnly: false
+    publicNetworkAccess: 'Disabled'
+    supportsHttpsTrafficOnly: true
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+    }
   }
 
   resource blobService 'blobServices@2021-06-01' = {

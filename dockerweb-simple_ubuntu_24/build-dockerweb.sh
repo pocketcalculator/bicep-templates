@@ -113,7 +113,7 @@ write_files:
       define( 'DB_CHARSET', 'utf8' );
       define( 'DB_COLLATE', '' );
       define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
-      define('FORCE_SSL_ADMIN', true);
+      // define('FORCE_SSL_ADMIN', true);
       
       // in some setups HTTP_X_FORWARDED_PROTO might contain 
       // a comma-separated list e.g. http,https

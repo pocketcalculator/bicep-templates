@@ -51,7 +51,7 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
     name: 'Basic'
   }
   properties: {
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'  // Standard SKU only supports Static
     publicIPAddressVersion: 'IPv4'
     dnsSettings: {
       domainNameLabel: dnsLabelPrefix

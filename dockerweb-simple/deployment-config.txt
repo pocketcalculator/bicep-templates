@@ -1,0 +1,3 @@
+# Deployment Configuration - Generated Tue Aug 12 06:21:24 PM EDT 2025
+# This file ensures consistent naming across all deployment scripts
+applicationSuffix=sods

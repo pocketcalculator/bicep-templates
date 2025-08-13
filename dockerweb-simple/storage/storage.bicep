@@ -54,3 +54,5 @@ resource blobStorage 'Microsoft.Storage/storageAccounts@2021-06-01' = {
 }
 
 output blobStorageId string = blobStorage.id
+output storageAccountId string = blobStorage.id
+output storageAccountName string = blobStorage.name

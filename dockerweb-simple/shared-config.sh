@@ -23,19 +23,19 @@ fi
 # General Azure variables
 subscription=null
 location=eastus
-applicationName=docker
+applicationName=inetweb
 application=${applicationName}${applicationSuffix}
-environment=dev
-owner=pocketcalculatorshow@gmail.com
+environment=prod
+owner=paul@pocketcalculator.io
 resourceGroupName=rg-$applicationName-$environment-$location
 
 # Network variables
 vnetCIDRPrefix=10.10
 adminSourceIP=`wget -O - v4.ident.me 2>/dev/null`
 
-# Key vault variables
-kvResourceGroup=rg-keyvault-prod-eastus2
-kvName=kv-keyvault-prod-eastus2
+# Key Vault configuration (same-subscription scenario)
+keyVaultName=<keyvault_name>
+kvResourceGroup=<keyvulat_resource_group_name>
 
 # Linux VM variables
 adminUsername=azureuser
@@ -49,4 +49,6 @@ echo "Application Suffix: $applicationSuffix"
 echo "Application Name: $application"
 echo "Resource Group: $resourceGroupName"
 echo "Storage Account: $backupBlobStorageAccountName"
+echo "Key Vault: $keyVaultName"
+echo "  - Resource Group: $kvResourceGroup"
 echo "============================"

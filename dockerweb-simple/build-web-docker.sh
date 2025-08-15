@@ -39,6 +39,7 @@ packages:
   - collectd-utils
   - openssl
   - nfs-common
+  - net-tools
   - certbot
   - python3
   - python-is-python3
@@ -73,6 +74,7 @@ EOF
 
 echo "Using static Bicep template: compute-main.bicep"
 echo "Creating compute deployment for ${environment} ${application} environment..."
+echo "Note: Using Key Vault in same subscription: $keyVaultName"
 az deployment group create \
 	--resource-group $resourceGroupName \
 	--name $application-compute-deployment \
@@ -81,7 +83,7 @@ az deployment group create \
 		"application=$application" \
 		"environment=$environment" \
 		"kvResourceGroup=$kvResourceGroup" \
-		"kvName=$kvName" \
+		"kvName=$keyVaultName" \
 		"adminUsername=$adminUsername" \
 		"blobStorageAccountName=$backupBlobStorageAccountName" \
 		"applicationSubnetId=$applicationSubnetId"

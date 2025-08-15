@@ -15,7 +15,7 @@ var commonTags = {
   Layer: 'Compute'
 }
 
-// Reference existing Key Vault
+// Reference existing Key Vault in same subscription
 resource kv 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   name: kvName
   scope: resourceGroup(kvResourceGroup)

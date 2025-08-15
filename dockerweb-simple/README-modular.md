@@ -18,13 +18,8 @@ The deployment is split into three logical layers:
 - `build-web-network.sh` - Deploys network infrastructure (VNet, NSGs, subnets)
 - `build-web-storage.sh` - Deploys storage infrastructure (blob storage)
 - `build-web-docker.sh` - Deploys compute infrastructure (VM, monitoring)
-- `deploy-all.sh` - Master script that runs all three in sequence
 - `cleanup.sh` - Removes generated files and optionally deletes Azure resources
 - `test-shared-config.sh` - Tests the shared configuration system
-
-### Original Files
-- `build-dockerweb.sh` - Original monolithic deployment script (preserved for reference)
-- `docker.bicep` - Original monolithic Bicep template
 
 ### Bicep Modules (Reused)
 - `network/` - Network-related Bicep modules
@@ -38,13 +33,6 @@ The deployment is split into three logical layers:
 - Azure CLI installed and authenticated
 - Appropriate Azure permissions to create resources
 - Key Vault with admin password (referenced in scripts)
-
-### Quick Start (All Components)
-```bash
-# Make scripts executable and deploy everything
-chmod +x ./deploy-all.sh
-./deploy-all.sh
-```
 
 ### Step-by-Step Deployment
 ```bash

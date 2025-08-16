@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "keyVaultName": {
+            "value": "kv-general-prod-001"
+        },
+        "location": {
+            "value": "eastus"
+        },
+        "tags": {
+            "value": {
+                "Purpose": "General Key Vault",
+                "Environment": "Production",
+                "CreatedBy": "Deployment Script",
+                "Project": "Infrastructure",
+                "Owner": "IT Operations"
+            }
+        },
+        "skuName": {
+            "value": "standard"
+        },
+        "enableRbacAuthorization": {
+            "value": true
+        },
+        "enabledForTemplateDeployment": {
+            "value": true
+        },
+        "enabledForDiskEncryption": {
+            "value": false
+        },
+        "enabledForDeployment": {
+            "value": false
+        },
+        "publicNetworkAccess": {
+            "value": "Disabled"
+        },
+        "principalId": {
+            "value": ""
+        },
+        "principalType": {
+            "value": "User"
+        },
+        "createPrivateEndpoint": {
+            "value": false
+        },
+        "enableDiagnostics": {
+            "value": true
+        },
+        "logAnalyticsWorkspaceId": {
+            "value": ""
+        },
+        "createSampleSecrets": {
+            "value": false
+        },
+        "sampleSecretName": {
+            "value": "sample-secret"
+        }
+    }
+}

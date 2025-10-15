@@ -76,7 +76,7 @@ runcmd:
   - apt update
   - apt install -y mongodb-org
   # Configure MongoDB for remote access (bind to all interfaces)
-  - sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
+  - sh -c "echo 'net:' > /etc/mongod.conf.new && echo '  port: 27017' >> /etc/mongod.conf.new && echo '  bindIp: 0.0.0.0' >> /etc/mongod.conf.new && cat /etc/mongod.conf | grep -v -E 'net:|port:|bindIp:' >> /etc/mongod.conf.new && mv /etc/mongod.conf.new /etc/mongod.conf"
   # Enable MongoDB service
   - systemctl start mongod
   - systemctl enable mongod

@@ -1,0 +1,47 @@
+# Generated deployment artifacts
+*-outputs.json
+network-outputs.json
+storage-outputs.json
+compute-outputs.json
+deployment-config.txt
+
+# Generated cloud-init files
+**/cloudInit.txt
+**/compute/cloudInit.txt
+
+# Azure credentials and secrets
+.azure/
+*.publishsettings
+
+# SSH keys (if any are stored locally)
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+# Environment-specific configs with secrets
+shared-config.sh.local
+*.local.sh
+
+# Bicep build outputs
+*.json.parameters.json
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Backup files
+*.bak
+*.backup

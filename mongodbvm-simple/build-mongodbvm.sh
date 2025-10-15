@@ -114,14 +114,14 @@ if [ $? -eq 0 ]; then
     
     echo "Compute resource information saved to: ./compute-outputs.json"
     
-    # Get the public IP address from the deployment outputs
+ # Get the public IP address from the deployment outputs
     echo "Retrieving public IP address..."
     
     # First get the public IP resource ID from deployment outputs
     publicIPResourceId=$(az deployment group show \
         --resource-group $resourceGroupName \
         --name $application-compute-deployment \
-        --query 'properties.outputs.webServerPublicIPResourceId.value' \
+        --query 'properties.outputs.mongodbServerPublicIPResourceId.value' \
         --output tsv)
     
     # Then get the actual IP address from the public IP resource
@@ -134,7 +134,7 @@ if [ $? -eq 0 ]; then
         fqdn=$(az deployment group show \
             --resource-group $resourceGroupName \
             --name $application-compute-deployment \
-            --query 'properties.outputs.webServerFQDN.value' \
+            --query 'properties.outputs.mongodbServerFQDN.value' \
             --output tsv)
     else
         publicIP=""

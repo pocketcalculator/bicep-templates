@@ -9,12 +9,12 @@ param customData string
 param databaseSubnetId string
 param vmDataCollectionRuleId string
 param blobStorageAccountName string
-var webServerName = 'web-${application}-${environment}-${location}'
-var webNICName = 'nic-${webServerName}'
-var ipConfigName = 'ipconfig0-${webNICName}'
-var publicIPAddressName = 'ip-${webServerName}'
-var osDiskName = 'disk-os-${webServerName}'
-var dnsLabelPrefix = toLower('${webServerName}')
+var mongodbServerName = 'mongodb-${application}-${environment}-${location}'
+var mongodbNICName = 'nic-${mongodbServerName}'
+var ipConfigName = 'ipconfig0-${mongodbNICName}'
+var publicIPAddressName = 'ip-${mongodbServerName}'
+var osDiskName = 'disk-os-${mongodbServerName}'
+var dnsLabelPrefix = toLower('${mongodbServerName}')
 var osDiskType = 'Standard_LRS'
 //globally unique identifier for Storage Blob Contributor Role
 // Note: Consider using more specific roles like "Storage Blob Data Contributor" (ba92f5b4-2d11-453d-a403-e96b0029c9fe)
@@ -24,7 +24,7 @@ var blobContributorRoleDefinitionName = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var readerRoleDefinitionName = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
-  name: webNICName
+  name: mongodbNICName
   location: location
   properties: {
     ipConfigurations: [
@@ -60,8 +60,8 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   }
 }
 
-resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: webServerName
+resource mongodbServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+  name: mongodbServerName
   location: location
   identity: {
     type: 'SystemAssigned'
@@ -71,7 +71,7 @@ resource webServer 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       vmSize: 'Standard_B2s'
     }
     osProfile: {
-      computerName: webServerName
+      computerName: mongodbServerName
       adminUsername: adminUsername
       adminPassword: adminPassword
       linuxConfiguration: {
@@ -144,34 +144,36 @@ resource readerRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-0
   name: readerRoleDefinitionName
 }
 
+/*
 resource blobContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: blobStorageAccount
-  name: guid(blobStorageAccountName, webServerName, blobContributorRoleDefinitionName)
+  name: guid(blobStorageAccountName, mongodbServerName, blobContributorRoleDefinitionName)
   properties: {
     roleDefinitionId:  blobContributorRoleDefinition.id
-    principalId: webServer.identity.principalId
+    principalId: mongodbServer.identity.principalId
   }
 }
 
 resource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()
-  name: guid(resourceGroup().id, webServerName, readerRoleDefinitionName)
+  name: guid(resourceGroup().id, mongodbServerName, readerRoleDefinitionName)
   properties: {
     roleDefinitionId: readerRoleDefinition.id
-    principalId: webServer.identity.principalId
+    principalId: mongodbServer.identity.principalId
   }
 }
+*/
 
 resource dataCollectionRuleAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = {
   name: 'dcrassociation'
-  scope: webServer
+  scope: mongodbServer
   properties: {
     dataCollectionRuleId: vmDataCollectionRuleId
   }
 }
 
-output webServerId string = webServer.id
-output webServerIP string = networkInterface.properties.ipConfigurations[0].properties.privateIPAddress
-output webserverIdentity string = webServer.identity.principalId
-output webServerPublicIPResourceId string = publicIP.id
-output webServerFQDN string = publicIP.properties.dnsSettings.fqdn
+output mongodbServerId string = mongodbServer.id
+output mongodbServerIP string = networkInterface.properties.ipConfigurations[0].properties.privateIPAddress
+output mongodbServerIdentity string = mongodbServer.identity.principalId
+output mongodbServerPublicIPResourceId string = publicIP.id
+output mongodbServerFQDN string = publicIP.properties.dnsSettings.fqdn

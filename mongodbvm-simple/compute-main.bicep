@@ -36,8 +36,8 @@ module vmDataCollectionRule './monitor/vmDataCollectionRule.bicep' = {
   name: 'vmDataCollectionRule-deployment'
 }
 
-// Deploy the VM
-module webserver './compute/vm.bicep' = {
+// Deploy the MongoDB VM
+module mongodbServer './compute/vm.bicep' = {
   params: {
     databaseSubnetId: databaseSubnetId
     blobStorageAccountName: blobStorageAccountName
@@ -49,11 +49,11 @@ module webserver './compute/vm.bicep' = {
     customData: base64(loadTextContent('./compute/cloudInit.txt'))
     vmDataCollectionRuleId: vmDataCollectionRule.outputs.vmDataCollectionRuleId
   }
-  name: 'webserver-deployment'
+  name: 'mongodbServer-deployment'
 }
 
 // Output important resource information
-output webServerPublicIPResourceId string = webserver.outputs.webServerPublicIPResourceId
-output webServerFQDN string = webserver.outputs.webServerFQDN
+output mongodbServerPublicIPResourceId string = mongodbServer.outputs.mongodbServerPublicIPResourceId
+output mongodbServerFQDN string = mongodbServer.outputs.mongodbServerFQDN
 output logAnalyticsWorkspaceName string = logAnalytics.outputs.logAnalyticsWorkspaceName
 output vmDataCollectionRuleId string = vmDataCollectionRule.outputs.vmDataCollectionRuleId

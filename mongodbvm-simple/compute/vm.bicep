@@ -9,7 +9,7 @@ param customData string
 param databaseSubnetId string
 param vmDataCollectionRuleId string
 param blobStorageAccountName string
-var mongodbServerName = 'mongodb-${application}-${environment}-${location}'
+var mongodbServerName = 'mongodb-${application}-${environment}'
 var mongodbNICName = 'nic-${mongodbServerName}'
 var ipConfigName = 'ipconfig0-${mongodbNICName}'
 var publicIPAddressName = 'ip-${mongodbServerName}'
